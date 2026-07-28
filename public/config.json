@@ -1,0 +1,19 @@
+{
+  "baseUrl": [
+    {
+      "localhost": "http://localhost:5100",
+      "garageflow": "https://api.garageflow.com.np"
+    }
+  ],
+  "serviceUrl": {
+    "printUrl": "http://localhost:1026"
+  },
+  "support": {
+    "phone1": "+977 1-5234567",
+    "phone2": "+977 9801234567",
+    "email": "support@garageflow.com.np"
+  },
+  "apiPath": "/api",
+  "siteName": "GarageFlow",
+  "useMockApi": false
+}
