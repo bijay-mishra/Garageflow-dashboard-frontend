@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import StickyHeader from '@/components/common/headers/StickyHeader'
-import SearchInput from '@/components/common/form/SearchInput'
+import TableFilterBar from '@/components/common/table/TableFilterBar'
 import { ErrorBlock } from '@/components/common/loaders/States'
 import CustomerTable from '@/components/Customer/CustomerTable'
 import CustomerForm from '@/components/Customer/CustomerForm'
@@ -53,9 +53,13 @@ export default function Customers() {
       </StickyHeader>
 
       <div className="card overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-ink-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <SearchInput value={query} onChange={setQuery} placeholder="Search name, phone, email…" />
-        </div>
+        {/* No server-side filters on customers yet — the bar is shared so the
+            search box lands in the same spot as on every other list page. */}
+        <TableFilterBar
+          search={query}
+          onSearchChange={setQuery}
+          searchPlaceholder="Search name, phone, email…"
+        />
 
         <CustomerTable
           data={data?.list ?? []}

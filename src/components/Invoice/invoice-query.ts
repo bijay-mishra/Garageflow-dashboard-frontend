@@ -1,7 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
+import { invalidateInBackground } from '@/lib/queryClient'
 import { useToast } from '@/context/ToastContext'
 import { customerApi } from '@/components/Customer/customer-api'
+import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import { invoiceApi } from './invoice-api'
 import type {
   IAddInvoiceRequest,
@@ -96,10 +98,15 @@ export const useGetInvoicePayments = (invoiceId: string | null) =>
 const useInvalidateInvoices = () => {
   const queryClient = useQueryClient()
   return () => {
+    // Billing shows the table and the billed/collected/outstanding cards side by
+    // side, so both of these are genuinely on screen and must refetch.
     queryClient.invalidateQueries({ queryKey: [invoiceApi.getInvoiceList.actionName] })
     queryClient.invalidateQueries({ queryKey: [invoiceApi.getInvoiceSummary.actionName] })
-    queryClient.invalidateQueries({ queryKey: ['GET_DASHBOARD_SUMMARY'] })
-    queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
+
+    // Revenue on the dashboard and `totalSpent` on the customer list also move,
+    // but neither is visible from Billing — dropped, not refetched.
+    invalidateInBackground(queryClient, [dashboardApi.getDashboardSummary.actionName])
+    invalidateInBackground(queryClient, [customerApi.getCustomerList.actionName])
   }
 }
 

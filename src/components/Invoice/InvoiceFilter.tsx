@@ -1,9 +1,9 @@
-import SearchInput from '@/components/common/form/SearchInput'
-import { INVOICE_STATUSES } from './invoice-schema'
+import TableFilterBar from '@/components/common/table/TableFilterBar'
+import FilterDropdown, { ALL } from '@/components/common/table/FilterDropdown'
+import { INVOICE_STATUSES, type InvoiceStatus } from './invoice-schema'
 
-export const INVOICE_STATUS_FILTERS = ['All', ...INVOICE_STATUSES] as const
-
-export type InvoiceStatusFilter = (typeof INVOICE_STATUS_FILTERS)[number]
+/** An invoice status, or `All` for no status filter. */
+export type InvoiceStatusFilter = InvoiceStatus | typeof ALL
 
 interface InvoiceFilterProps {
   search: string
@@ -12,25 +12,25 @@ interface InvoiceFilterProps {
   onStatusChange: (value: InvoiceStatusFilter) => void
 }
 
-/** Search box + status pills above the invoice table. */
-export default function InvoiceFilter({ search, onSearchChange, status, onStatusChange }: InvoiceFilterProps) {
+/** Search box plus a status dropdown above the invoice table. */
+export default function InvoiceFilter({
+  search,
+  onSearchChange,
+  status,
+  onStatusChange,
+}: InvoiceFilterProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-ink-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <SearchInput value={search} onChange={onSearchChange} placeholder="Search invoice, customer, plate…" />
-
-      <div className="flex flex-wrap gap-1">
-        {INVOICE_STATUS_FILTERS.map((option) => (
-          <button
-            key={option}
-            onClick={() => onStatusChange(option)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-              status === option ? 'bg-brand-600 text-white' : 'bg-ink-50 text-ink-500 hover:bg-ink-100'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
+    <TableFilterBar
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Search invoice, customer, plate…"
+    >
+      <FilterDropdown
+        placeholder="All statuses"
+        options={INVOICE_STATUSES}
+        value={status}
+        onChange={onStatusChange}
+      />
+    </TableFilterBar>
   )
 }

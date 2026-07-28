@@ -1,6 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
+import { invalidateInBackground } from '@/lib/queryClient'
 import { useToast } from '@/context/ToastContext'
+import { vehicleApi } from '@/components/Vehicle/vehicle-api'
+import { jobCardApi } from '@/components/JobCard/jobcard-api'
+import { invoiceApi } from '@/components/Invoice/invoice-api'
+import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import type { IVehicle } from '@/components/Vehicle/vehicle-schema'
 import { customerApi } from './customer-api'
 import type { CustomerFormType, ICustomer } from './customer-schema'
@@ -11,6 +16,12 @@ import type { CustomerFormType, ICustomer } from './customer-schema'
 //
 // Mutations show the server's `message` rather than a hardcoded string — the
 // API decides the wording; the fallback only covers a response with none.
+//
+// Invalidation rule of thumb: refetch the customer list, because that is the
+// screen the user is standing on when they run one of these. Everything a
+// customer change *also* moves goes through `invalidateInBackground`, which
+// drops the cached copy without issuing a request — those screens reload when
+// you navigate to them.
 
 export const useGetCustomerList = (enabled = true) =>
   useQuery({
@@ -98,7 +109,9 @@ export const useAddCustomer = () => {
       initApiRequest<ICustomer>({ apiDetails: customerApi.addCustomer, requestData }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
-      queryClient.invalidateQueries({ queryKey: ['GET_DASHBOARD_SUMMARY'] })
+      // A new customer moves `activeCustomers` and the activity feed, neither of
+      // which is on screen here.
+      invalidateInBackground(queryClient, [dashboardApi.getDashboardSummary.actionName])
       toast.success(res?.data?.message ?? 'Customer added')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not add customer'),
@@ -120,7 +133,10 @@ export const useUpdateCustomer = () => {
       }),
     onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
-      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerById.actionName, variables.id] })
+      // The API answers an update with the saved row, and it is the same
+      // envelope `useGetCustomerById` caches — so write it straight into the
+      // cache rather than spending a second request to re-read what we just got.
+      queryClient.setQueryData([customerApi.getCustomerById.actionName, variables.id], res)
       toast.success(res?.data?.message ?? 'Customer updated')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not update customer'),
@@ -135,10 +151,26 @@ export const useDeleteCustomer = () => {
     mutationKey: [customerApi.deleteCustomer.actionName],
     mutationFn: (id: string) =>
       initApiRequest<null>({ apiDetails: customerApi.deleteCustomer, pathVariables: { id } }),
-    onSuccess: (res) => {
+    onSuccess: (res, id) => {
       // Deleting a customer cascades to their vehicles, job cards and invoices,
-      // so every list is stale, not just this one.
-      queryClient.invalidateQueries()
+      // so those caches really are stale. They are not on screen though, so they
+      // are dropped rather than refetched — an argument-less invalidateQueries()
+      // here used to refetch every active query in the app, which is several
+      // requests for a button that changed one row.
+      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
+
+      queryClient.removeQueries({ queryKey: [customerApi.getCustomerById.actionName, id] })
+      queryClient.removeQueries({ queryKey: [customerApi.getCustomerVehicles.actionName, id] })
+
+      for (const key of [
+        vehicleApi.getVehicleList.actionName,
+        jobCardApi.getJobCardList.actionName,
+        invoiceApi.getInvoiceList.actionName,
+        invoiceApi.getInvoiceSummary.actionName,
+        dashboardApi.getDashboardSummary.actionName,
+      ])
+        invalidateInBackground(queryClient, [key])
+
       toast.success(res?.data?.message ?? 'Customer deleted')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not delete customer'),

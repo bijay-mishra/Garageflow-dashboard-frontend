@@ -4,7 +4,10 @@ import StickyHeader from '@/components/common/headers/StickyHeader'
 import { ErrorBlock } from '@/components/common/loaders/States'
 import VehicleTable from '@/components/Vehicle/VehicleTable'
 import VehicleForm from '@/components/Vehicle/VehicleForm'
-import VehicleFilter, { type FuelFilter } from '@/components/Vehicle/VehicleFilter'
+import VehicleFilter, {
+  type FuelFilter,
+  type VehicleTypeFilter,
+} from '@/components/Vehicle/VehicleFilter'
 import {
   useDeleteVehicle,
   useFetchAllVehicles,
@@ -20,23 +23,29 @@ export default function Vehicles() {
   const [query, setQuery] = useSearchQuery()
   const search = useDebouncedValue(query)
   const [fuel, setFuel] = useState<FuelFilter>('All')
+  const [type, setType] = useState<VehicleTypeFilter>('All')
 
-  // "All" means send no fuel param at all.
+  // "All" means send no param at all.
   const fuelParam = fuel === 'All' ? undefined : fuel
+  const typeParam = type === 'All' ? undefined : type
 
-  const table = useTableState({ pageSize: 20 }, [search, fuelParam])
-  const { data, isFetching, isError } = useGetVehicleListPaged(table.toQuery({ search, fuel: fuelParam }))
+  const table = useTableState({ pageSize: 20 }, [search, fuelParam, typeParam])
+  const { data, isFetching, isError } = useGetVehicleListPaged(
+    table.toQuery({ search, fuel: fuelParam, type: typeParam }),
+  )
 
   const deleteVehicle = useDeleteVehicle()
   const fetchAllVehicles = useFetchAllVehicles()
   const [modal, setModal] = useState<{ open: boolean; editing?: IVehicle }>({ open: false })
 
   const exportCsv = async () => {
-    const rows = await fetchAllVehicles({ search, fuel: fuelParam })
+    const rows = await fetchAllVehicles({ search, fuel: fuelParam, type: typeParam })
     downloadCSV(
       'vehicles',
-      ['ID', 'Plate', 'Make', 'Model', 'Year', 'Fuel', 'Odometer', 'Owner', 'Last service'],
-      rows.map((v) => [v.id, v.plate, v.make, v.model, v.year, v.fuel, v.odometer, v.customerName, v.lastServiceDate ?? '']),
+      ['ID', 'Plate', 'Make', 'Model', 'Year', 'Type', 'Fuel', 'Odometer', 'Owner', 'Last service'],
+      rows.map((v) => [
+        v.id, v.plate, v.make, v.model, v.year, v.type, v.fuel, v.odometer, v.customerName, v.lastServiceDate ?? '',
+      ]),
     )
   }
 
@@ -54,7 +63,14 @@ export default function Vehicles() {
       </StickyHeader>
 
       <div className="card overflow-hidden">
-        <VehicleFilter search={query} onSearchChange={setQuery} fuel={fuel} onFuelChange={setFuel} />
+        <VehicleFilter
+          search={query}
+          onSearchChange={setQuery}
+          type={type}
+          onTypeChange={setType}
+          fuel={fuel}
+          onFuelChange={setFuel}
+        />
 
         <VehicleTable
           data={data?.list ?? []}

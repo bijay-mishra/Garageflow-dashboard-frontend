@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { ChevronDownIcon, UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Logo from '@/components/common/Logo'
 import { workshopInfo } from '@/data/seed'
-import { useGetJobCardList } from '@/components/JobCard/jobcard-query'
+import { useGetDashboardSummary } from '@/components/Dashboard/dashboard-query'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { HOME, NAV, type NavItem } from '@/lib/navigation'
@@ -18,10 +18,11 @@ interface SidebarProps {
 export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
   const { t } = useLang()
   const { user } = useAuth()
-  const { data: jobs = [] } = useGetJobCardList()
-  const openJobs = jobs.filter(
-    (j) => j.status === 'Open' || j.status === 'In Progress' || j.status === 'Awaiting Parts',
-  ).length
+  // The badge is one number, so it comes from the dashboard aggregate rather
+  // than from downloading every job card to count them here. NotificationMenu
+  // already holds this query, so the sidebar costs no extra request.
+  const { data: summary } = useGetDashboardSummary()
+  const openJobs = summary?.openJobs ?? 0
 
   // On the rail everything but the icons disappears (desktop only — the mobile
   // drawer always shows full labels).

@@ -34,10 +34,15 @@ export default function GlobalSearch() {
   const boxRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Data is already cached by React Query — searching is a client-side filter.
-  const { data: customers = [] } = useGetCustomerList()
-  const { data: vehicles = [] } = useGetVehicleList()
-  const { data: jobs = [] } = useGetJobCardList()
+  // Searching is a client-side filter over the whole result set, so the index
+  // is only worth downloading once there is something to filter. Fetching it on
+  // mount would put three unpaged requests on every page in the app — and make
+  // every customer/vehicle/job mutation refetch them, because this component
+  // lives in the Topbar and is therefore always an active subscriber.
+  const indexEnabled = open && q.trim() !== ''
+  const { data: customers = [] } = useGetCustomerList(indexEnabled)
+  const { data: vehicles = [] } = useGetVehicleList(indexEnabled)
+  const { data: jobs = [] } = useGetJobCardList(indexEnabled)
 
   const hits = useMemo<Hit[]>(() => {
     const term = q.trim().toLowerCase()

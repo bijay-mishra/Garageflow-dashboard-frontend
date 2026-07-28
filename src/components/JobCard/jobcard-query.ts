@@ -1,7 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
+import { invalidateInBackground } from '@/lib/queryClient'
 import { useToast } from '@/context/ToastContext'
 import { vehicleApi } from '@/components/Vehicle/vehicle-api'
+import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import { jobCardApi } from './jobcard-api'
 import type { IJobCard, JobCardFormType, JobStatus } from './jobcard-schema'
 
@@ -48,11 +50,16 @@ export const useGetJobCardById = (id: string | null) =>
 const useInvalidateJobCards = () => {
   const queryClient = useQueryClient()
   return () => {
+    // The only list on screen when a job card is created, edited or deleted.
     queryClient.invalidateQueries({ queryKey: [jobCardApi.getJobCardList.actionName] })
+
     // Job status feeds the dashboard counts, and completing a job updates the
-    // vehicle's lastServiceDate.
-    queryClient.invalidateQueries({ queryKey: ['GET_DASHBOARD_SUMMARY'] })
-    queryClient.invalidateQueries({ queryKey: [vehicleApi.getVehicleList.actionName] })
+    // vehicle's lastServiceDate — both on other screens, so they are dropped
+    // rather than refetched. The vehicle list in particular is subscribed to by
+    // the open JobCardForm's vehicle dropdown, which should not reload
+    // underneath the user mid-edit.
+    invalidateInBackground(queryClient, [dashboardApi.getDashboardSummary.actionName])
+    invalidateInBackground(queryClient, [vehicleApi.getVehicleList.actionName])
   }
 }
 
@@ -88,7 +95,9 @@ export const useUpdateJobCard = () => {
       }),
     onSuccess: (res, variables) => {
       invalidate()
-      queryClient.invalidateQueries({ queryKey: [jobCardApi.getJobCardById.actionName, variables.id] })
+      // The update response is the saved job card in the envelope the detail
+      // query caches, so no follow-up read is needed.
+      queryClient.setQueryData([jobCardApi.getJobCardById.actionName, variables.id], res)
       toast.success(res?.data?.message ?? 'Job card updated')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not update job card'),

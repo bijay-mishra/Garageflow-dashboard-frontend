@@ -8,6 +8,7 @@ import { useGetCustomerList } from '@/components/Customer/customer-query'
 import { useAddVehicle, useUpdateVehicle } from './vehicle-query'
 import {
   FUEL_TYPES,
+  VEHICLE_TYPES,
   toVehicleFormValues,
   vehicleFormSchema,
   type IVehicle,
@@ -42,10 +43,11 @@ export default function VehicleForm({ editing, defaultCustomerId, onClose }: Veh
   })
 
   const customerOptions = useMemo(
-    () => customers.map((c) => ({ label: c.name, value: c.id, detail: c.phone })),
+    () => customers.map((c) => ({ label: c.name, value: c.id })),
     [customers],
   )
 
+  const typeOptions = useMemo(() => VEHICLE_TYPES.map((t) => ({ label: t, value: t })), [])
   const fuelOptions = useMemo(() => FUEL_TYPES.map((f) => ({ label: f, value: f })), [])
 
   const busy = addVehicle.isPending || updateVehicle.isPending
@@ -88,7 +90,8 @@ export default function VehicleForm({ editing, defaultCustomerId, onClose }: Veh
           <Input name="vin" label="VIN / Chassis" formik={formik} placeholder="Optional" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4">
+          <FormikDropdown name="type" label="Type" formik={formik} options={typeOptions} isClearable={false} />
           <FormikDropdown name="fuel" label="Fuel" formik={formik} options={fuelOptions} isClearable={false} />
           <Input name="odometer" label="Odometer (km)" type="number" formik={formik} min={0} isRequired />
           <Input name="color" label="Colour" formik={formik} placeholder="Silver" />

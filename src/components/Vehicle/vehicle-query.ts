@@ -1,14 +1,24 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
+import { invalidateInBackground } from '@/lib/queryClient'
 import { useToast } from '@/context/ToastContext'
 import { customerApi } from '@/components/Customer/customer-api'
+import { jobCardApi } from '@/components/JobCard/jobcard-api'
+import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import { vehicleApi } from './vehicle-api'
 import type { IVehicle, VehicleFormType } from './vehicle-schema'
+
+// The vehicle list is the screen these mutations run from, so it refetches.
+// A vehicle change also moves its owner's `vehicleCount` and the job lists —
+// those are dropped without a request and reload on navigation. See
+// `invalidateInBackground` in lib/queryClient.ts.
 
 /** Extra filters the vehicle list accepts on top of paging. */
 export interface VehicleListParams extends IPaginationParams {
   /** Petrol, Diesel, Electric, Hybrid or CNG. Omit for all. */
   fuel?: string
+  /** Bike, Car, Van, Bus, Truck or Tractor. Omit for all. */
+  type?: string
 }
 
 export const useGetVehicleList = (enabled = true) =>
@@ -73,9 +83,11 @@ export const useAddVehicle = () => {
       initApiRequest<IVehicle>({ apiDetails: vehicleApi.addVehicle, requestData }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: [vehicleApi.getVehicleList.actionName] })
-      // A new vehicle changes its owner's vehicleCount.
-      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
-      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerVehicles.actionName] })
+      // A new vehicle changes its owner's vehicleCount, but the customer list is
+      // a different screen — and the owner dropdown in this very form subscribes
+      // to it, so refetching would reload the dropdown the user just used.
+      invalidateInBackground(queryClient, [customerApi.getCustomerList.actionName])
+      invalidateInBackground(queryClient, [customerApi.getCustomerVehicles.actionName])
       toast.success(res?.data?.message ?? 'Vehicle added')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not add vehicle'),
@@ -96,9 +108,11 @@ export const useUpdateVehicle = () => {
       }),
     onSuccess: (res, variables) => {
       queryClient.invalidateQueries({ queryKey: [vehicleApi.getVehicleList.actionName] })
-      queryClient.invalidateQueries({ queryKey: [vehicleApi.getVehicleById.actionName, variables.id] })
-      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerList.actionName] })
-      queryClient.invalidateQueries({ queryKey: [customerApi.getCustomerVehicles.actionName] })
+      // The response is the saved row in the same envelope the detail query
+      // caches — no need to re-read it.
+      queryClient.setQueryData([vehicleApi.getVehicleById.actionName, variables.id], res)
+      invalidateInBackground(queryClient, [customerApi.getCustomerList.actionName])
+      invalidateInBackground(queryClient, [customerApi.getCustomerVehicles.actionName])
       toast.success(res?.data?.message ?? 'Vehicle updated')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not update vehicle'),
@@ -113,10 +127,23 @@ export const useDeleteVehicle = () => {
     mutationKey: [vehicleApi.deleteVehicle.actionName],
     mutationFn: (id: string) =>
       initApiRequest<null>({ apiDetails: vehicleApi.deleteVehicle, pathVariables: { id } }),
-    onSuccess: (res) => {
+    onSuccess: (res, id) => {
       // Deleting a vehicle also deletes its job cards, so the job lists and the
-      // dashboard counts move too.
-      queryClient.invalidateQueries()
+      // dashboard counts move too — but only the vehicle list is on screen, so
+      // only it is refetched. This was an argument-less invalidateQueries(),
+      // which refetched every active query in the app.
+      queryClient.invalidateQueries({ queryKey: [vehicleApi.getVehicleList.actionName] })
+
+      queryClient.removeQueries({ queryKey: [vehicleApi.getVehicleById.actionName, id] })
+
+      for (const key of [
+        jobCardApi.getJobCardList.actionName,
+        customerApi.getCustomerList.actionName,
+        customerApi.getCustomerVehicles.actionName,
+        dashboardApi.getDashboardSummary.actionName,
+      ])
+        invalidateInBackground(queryClient, [key])
+
       toast.success(res?.data?.message ?? 'Vehicle deleted')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not delete vehicle'),

@@ -4,7 +4,7 @@ import DataTable, { type Column, type ServerTableProps } from '@/components/comm
 import Badge, { type BadgeTone } from '@/components/common/Badge'
 import EntityActions from '@/components/common/buttons/EntityActions'
 import { formatDate, formatNumber } from '@/lib/format'
-import type { FuelType, IVehicle } from './vehicle-schema'
+import type { FuelType, IVehicle, VehicleType } from './vehicle-schema'
 
 /** Fuel type → badge colour. Electric reads green, diesel stays neutral. */
 export const fuelTone: Record<FuelType, BadgeTone> = {
@@ -13,6 +13,17 @@ export const fuelTone: Record<FuelType, BadgeTone> = {
   Electric: 'green',
   Hybrid: 'violet',
   CNG: 'amber',
+}
+
+/** Body class → badge colour. The heavy categories share a warmer end of the
+ *  palette so a bus or truck stands out from the light vehicles at a glance. */
+export const vehicleTypeTone: Record<VehicleType, BadgeTone> = {
+  Bike: 'violet',
+  Car: 'blue',
+  Van: 'green',
+  Bus: 'amber',
+  Truck: 'amber',
+  Tractor: 'gray',
 }
 
 interface VehicleTableProps extends ServerTableProps {
@@ -65,6 +76,12 @@ export default function VehicleTable({
         header: 'Owner',
         sortValue: (v) => v.customerName,
         render: (v) => <span className="text-ink-700">{v.customerName}</span>,
+      },
+      {
+        key: 'type',
+        header: 'Type',
+        sortValue: (v) => v.type,
+        render: (v) => <Badge tone={vehicleTypeTone[v.type]}>{v.type}</Badge>,
       },
       {
         key: 'fuel',

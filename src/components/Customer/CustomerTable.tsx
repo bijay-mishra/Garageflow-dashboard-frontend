@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { PhoneIcon, UsersIcon } from '@heroicons/react/24/outline'
+import { UsersIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import EntityActions from '@/components/common/buttons/EntityActions'
 import { formatDate, formatRs } from '@/lib/format'
@@ -38,11 +38,7 @@ export default function CustomerTable({
         key: 'phone',
         header: 'Phone',
         sortValue: (c) => c.phone,
-        render: (c) => (
-          <p className="flex items-center gap-1.5 text-ink-700">
-            <PhoneIcon className="h-3.5 w-3.5 text-ink-400" /> {c.phone}
-          </p>
-        ),
+        render: (c) => <span className="text-ink-700">{c.phone}</span>,
       },
       {
         key: 'email',

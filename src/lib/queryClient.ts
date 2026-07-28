@@ -10,14 +10,18 @@ export const queryClient = new QueryClient({
   },
 })
 
-/** Central registry of query keys — one place to look when invalidating caches. */
-export const qk = {
-  customers: ['customers'] as const,
-  customer: (id: string) => ['customers', id] as const,
-  vehicles: ['vehicles'] as const,
-  vehiclesByCustomer: (id: string) => ['vehicles', 'byCustomer', id] as const,
-  jobCards: ['jobCards'] as const,
-  jobCard: (id: string) => ['jobCards', id] as const,
-  invoices: ['invoices'] as const,
-  dashboard: ['dashboard'] as const,
-}
+/**
+ * Marks a cache entry stale **without** issuing a request.
+ *
+ * The default `invalidateQueries` refetches every *active* match immediately —
+ * so a mutation that ripples across features (a new vehicle changes its owner's
+ * `vehicleCount`, a paid invoice changes the dashboard revenue) fires a network
+ * call for each one, from whatever screen you happen to be on.
+ *
+ * Use this for the knock-on effects instead. The data is discarded, and the
+ * refetch happens the next time a component actually mounts that query — i.e.
+ * when you navigate to the screen that shows it. Use a plain
+ * `invalidateQueries` only for the list the user is currently looking at.
+ */
+export const invalidateInBackground = (client: QueryClient, queryKey: readonly unknown[]) =>
+  client.invalidateQueries({ queryKey, refetchType: 'none' })

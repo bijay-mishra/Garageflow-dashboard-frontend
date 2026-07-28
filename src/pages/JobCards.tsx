@@ -6,6 +6,7 @@ import { EmptyState, ErrorBlock, LoadingBlock } from '@/components/common/loader
 import JobCardBoard from '@/components/JobCard/JobCardBoard'
 import JobCardTable from '@/components/JobCard/JobCardTable'
 import JobCardForm from '@/components/JobCard/JobCardForm'
+import JobCardFilter, { type JobStatusFilter } from '@/components/JobCard/JobCardFilter'
 import {
   useDeleteJobCard,
   useGetJobCardList,
@@ -21,14 +22,21 @@ export default function JobCards() {
   const [query, setQuery] = useSearchQuery()
   const search = useDebouncedValue(query)
   const [view, setView] = useState<'board' | 'list'>('board')
+  const [status, setStatus] = useState<JobStatusFilter>('All')
   const [modal, setModal] = useState<{ open: boolean; editing?: IJobCard }>({ open: false })
+
+  // "All" means send no status param at all.
+  const statusParam = status === 'All' ? undefined : status
 
   // The board groups every open job into columns, so it cannot be paged — it
   // fetches the lot. Only the list view pages against the server.
   const boardQuery = useGetJobCardList(view === 'board')
 
-  const table = useTableState({ pageSize: 20 }, [search])
-  const listQuery = useGetJobCardListPaged(table.toQuery({ search }), view === 'list')
+  const table = useTableState({ pageSize: 20 }, [search, statusParam])
+  const listQuery = useGetJobCardListPaged(
+    table.toQuery({ search, status: statusParam }),
+    view === 'list',
+  )
 
   const updateJobCard = useUpdateJobCard()
   const deleteJobCard = useDeleteJobCard()
@@ -78,9 +86,14 @@ export default function JobCards() {
         </button>
       </StickyHeader>
 
-      <div className="max-w-md">
-        <SearchInput value={query} onChange={setQuery} placeholder="Search job, plate, mechanic…" />
-      </div>
+      {/* The board is not a table, so it gets a plain search box; the list view
+          carries its search and status filter inside the table card, the way
+          every other list page does. */}
+      {view === 'board' && (
+        <div className="max-w-md">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search job, plate, mechanic…" />
+        </div>
+      )}
 
       {view === 'board' ? (
         boardJobs.length === 0 ? (
@@ -96,6 +109,13 @@ export default function JobCards() {
         )
       ) : (
         <div className="card overflow-hidden">
+          <JobCardFilter
+            search={query}
+            onSearchChange={setQuery}
+            status={status}
+            onStatusChange={setStatus}
+          />
+
           <JobCardTable
             data={listQuery.data?.list ?? []}
             total={listQuery.data?.count ?? 0}
