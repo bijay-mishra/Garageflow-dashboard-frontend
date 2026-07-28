@@ -81,7 +81,6 @@ export default function CustomerTable({
     ],
     [onEdit, onDelete],
   )
-
   return (
     <DataTable
       serverMode
