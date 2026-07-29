@@ -8,7 +8,7 @@ import { invoiceApi } from '@/components/Invoice/invoice-api'
 import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import type { IVehicle } from '@/components/Vehicle/vehicle-schema'
 import { customerApi } from './customer-api'
-import type { CustomerFormType, ICustomer } from './customer-schema'
+import type { CustomerFormType, ICustomer, UpdateCustomerRequest } from './customer-schema'
 
 // ── Customer queries ─────────────────────────────────────────────────────────
 // Every response is the `{ data, status, message }` envelope, so the payload is
@@ -124,8 +124,9 @@ export const useUpdateCustomer = () => {
 
   return useMutation({
     mutationKey: [customerApi.updateCustomer.actionName],
-    // The API treats PUT as a patch — only the fields sent are applied.
-    mutationFn: ({ id, ...requestData }: CustomerFormType & { id: string }) =>
+    // The API treats PUT as a patch — only the fields sent are applied, which is
+    // why removing a map pin travels as `clearLocation` rather than a null.
+    mutationFn: ({ id, ...requestData }: UpdateCustomerRequest & { id: string }) =>
       initApiRequest<ICustomer>({
         apiDetails: customerApi.updateCustomer,
         pathVariables: { id },

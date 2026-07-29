@@ -17,7 +17,15 @@ export const JOB_STATUSES = [
 
 export const JOB_PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'] as const
 
-export const JOB_LINE_KINDS = ['labour', 'part'] as const
+/**
+ * What a line on a job card is.
+ *
+ * `service` is a priced item taken from the workshop's price list — a wash, a
+ * polish, an AC regas — as opposed to labour billed by the hour or a part
+ * fitted to the car. Kept separate from `labour` so the shop can answer "how
+ * much did washing earn us?"; a wash billed as labour is invisible.
+ */
+export const JOB_LINE_KINDS = ['labour', 'part', 'service'] as const
 
 export type JobStatus = (typeof JOB_STATUSES)[number]
 export type JobPriority = (typeof JOB_PRIORITIES)[number]
@@ -34,10 +42,18 @@ export const MECHANICS = ['Suresh Lama', 'Kiran Adhikari', 'Ramesh Bhandari', 'D
 
 export interface IJobLine {
   description: string
-  /** Hours for labour, units for parts. */
+  /** Hours for labour, units for parts and services. */
   qty: number
   unitPrice: number
   kind: JobLineKind
+  /**
+   * The price-list entry this line came from, or null when it was typed in.
+   *
+   * A link, not a lookup: the description and price were copied when the line
+   * was added, so re-pricing the service later leaves this job at what it was
+   * quoted, and the row can still be discounted by hand.
+   */
+  serviceId?: string | null
 }
 
 /** A job card as `GET /api/job-cards` returns it. */
@@ -74,6 +90,8 @@ export const jobLineSchema = Yup.object({
     .required('Price is required')
     .min(0, 'Price cannot be negative'),
   kind: Yup.string().oneOf(JOB_LINE_KINDS).required(),
+  // Optional and nullable: hand-typed rows have no catalogue entry behind them.
+  serviceId: Yup.string().nullable().optional(),
 })
 
 export const jobCardFormSchema = Yup.object({
@@ -96,7 +114,16 @@ export const jobCardFormSchema = Yup.object({
 export type JobCardFormType = Yup.InferType<typeof jobCardFormSchema>
 
 /** A fresh, blank parts/labour row. */
-export const emptyJobLine: IJobLine = { description: '', qty: 1, unitPrice: 0, kind: 'labour' }
+export const emptyJobLine: IJobLine = { description: '', qty: 1, unitPrice: 0, kind: 'labour', serviceId: null }
+
+/** A priced row built from a catalogue service, ready to push onto the lines. */
+export const serviceJobLine = (service: { id: string; name: string; price: number }): IJobLine => ({
+  description: service.name,
+  qty: 1,
+  unitPrice: service.price,
+  kind: 'service',
+  serviceId: service.id,
+})
 
 export const jobCardInitialValues: JobCardFormType = {
   vehicleId: '',

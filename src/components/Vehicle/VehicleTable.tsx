@@ -50,15 +50,13 @@ export default function VehicleTable({
         key: 'make',
         header: 'Vehicle',
         sortValue: (v) => `${v.make} ${v.model}`,
+        // One line. The year is folded in rather than dropped — it is how you
+        // tell two otherwise identical cars apart — and the colour goes, since
+        // the plate below already identifies the vehicle uniquely.
         render: (v) => (
-          <>
-            <p className="font-semibold text-ink-900">
-              {v.make} {v.model}
-            </p>
-            <p className="text-xs text-ink-400">
-              {v.year} · {v.color}
-            </p>
-          </>
+          <span className="font-semibold text-ink-900">
+            {v.make} {v.model} {v.year}
+          </span>
         ),
       },
       {

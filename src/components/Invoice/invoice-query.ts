@@ -7,7 +7,9 @@ import { dashboardApi } from '@/components/Dashboard/dashboard-api'
 import { invoiceApi } from './invoice-api'
 import type {
   IAddInvoiceRequest,
+  ICollections,
   IInvoice,
+  IInvoicePrint,
   IInvoiceSummary,
   IPayment,
   InvoiceStatus,
@@ -47,6 +49,35 @@ export const useGetInvoiceSummary = (enabled = true) =>
     queryKey: [invoiceApi.getInvoiceSummary.actionName],
     queryFn: () =>
       initApiRequest<IInvoiceSummary>({ apiDetails: invoiceApi.getInvoiceSummary }),
+    enabled,
+    select: (res) => res?.data?.data ?? null,
+  })
+
+/**
+ * The whole printable bill in one request.
+ *
+ * `staleTime: 0` and no caching between visits: a bill is a document, and
+ * reprinting one after a payment was recorded must show the payment. The cost of
+ * being wrong here is a customer handed a receipt that says they still owe money.
+ */
+export const useGetInvoicePrint = (id: string | null) =>
+  useQuery({
+    queryKey: [invoiceApi.getInvoicePrint.actionName, id],
+    queryFn: () =>
+      initApiRequest<IInvoicePrint>({
+        apiDetails: invoiceApi.getInvoicePrint,
+        pathVariables: { id: id as string },
+      }),
+    enabled: !!id,
+    staleTime: 0,
+    select: (res) => res?.data?.data ?? null,
+  })
+
+/** How much money came in through each channel. */
+export const useGetCollections = (enabled = true) =>
+  useQuery({
+    queryKey: [invoiceApi.getCollections.actionName],
+    queryFn: () => initApiRequest<ICollections>({ apiDetails: invoiceApi.getCollections }),
     enabled,
     select: (res) => res?.data?.data ?? null,
   })

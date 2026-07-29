@@ -7,8 +7,10 @@ import InvoiceTable from '@/components/Invoice/InvoiceTable'
 import InvoiceForm from '@/components/Invoice/InvoiceForm'
 import PaymentForm from '@/components/Invoice/PaymentForm'
 import InvoiceFilter, { type InvoiceStatusFilter } from '@/components/Invoice/InvoiceFilter'
+import CollectionsPanel from '@/components/Invoice/CollectionsPanel'
 import {
   useFetchAllInvoices,
+  useGetCollections,
   useGetInvoiceListPaged,
   useGetInvoiceSummary,
 } from '@/components/Invoice/invoice-query'
@@ -33,6 +35,7 @@ export default function Billing() {
 
   // All-time totals, so the cards do not change as you page through the table.
   const { data: summary } = useGetInvoiceSummary()
+  const { data: collections } = useGetCollections()
 
   const fetchAllInvoices = useFetchAllInvoices()
   const [createOpen, setCreateOpen] = useState(false)
@@ -60,10 +63,16 @@ export default function Billing() {
         </button>
       </StickyHeader>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Total billed" value={formatRsCompact(summary?.billed ?? 0)} icon={BanknotesIcon} tone="brand" />
-        <StatCard label="Collected" value={formatRsCompact(summary?.collected ?? 0)} icon={CheckCircleIcon} tone="emerald" />
-        <StatCard label="Outstanding" value={formatRsCompact(summary?.outstanding ?? 0)} icon={ClockIcon} tone="rose" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1">
+          <StatCard label="Total billed" value={formatRsCompact(summary?.billed ?? 0)} icon={BanknotesIcon} tone="brand" />
+          <StatCard label="Collected" value={formatRsCompact(summary?.collected ?? 0)} icon={CheckCircleIcon} tone="emerald" />
+          <StatCard label="Outstanding" value={formatRsCompact(summary?.outstanding ?? 0)} icon={ClockIcon} tone="rose" />
+        </div>
+
+        {/* Beside the totals rather than under them: "how much" and "how it
+            arrived" are read together at the end of a day. */}
+        <CollectionsPanel data={collections ?? null} />
       </div>
 
       <div className="card overflow-hidden">

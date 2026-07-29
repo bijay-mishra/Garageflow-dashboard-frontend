@@ -33,23 +33,15 @@ export default function JobCardTable({
         key: 'id',
         header: 'Job',
         sortValue: (j) => j.id,
-        render: (j) => (
-          <>
-            <p className="font-semibold text-ink-900">{j.id}</p>
-            <p className="max-w-[200px] truncate text-xs text-ink-400">{j.complaint}</p>
-          </>
-        ),
+        // One line per cell. The complaint is still on the card itself — it is
+        // usually a paragraph, and truncating it to 200px told you little.
+        render: (j) => <span className="font-semibold text-ink-900">{j.id}</span>,
       },
       {
         key: 'vehicleLabel',
         header: 'Vehicle',
         sortValue: (j) => j.vehicleLabel,
-        render: (j) => (
-          <>
-            <p className="text-ink-800">{j.vehicleLabel}</p>
-            <p className="text-xs text-ink-400">{j.vehiclePlate}</p>
-          </>
-        ),
+        render: (j) => <span className="text-ink-800">{j.vehicleLabel}</span>,
       },
       {
         key: 'mechanic',

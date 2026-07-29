@@ -5,6 +5,7 @@ import Input from '@/components/common/form/Input'
 import FormikDropdown from '@/components/common/form/FormikDropdown'
 import { Spinner } from '@/components/common/loaders/States'
 import { useGetVehicleList } from '@/components/Vehicle/vehicle-query'
+import { useGetMechanicList } from '@/components/Staff/staff-query'
 import JobLinesField from './JobLinesField'
 import { useAddJobCard, useUpdateJobCard } from './jobcard-query'
 import {
@@ -54,7 +55,22 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
     [vehicles],
   )
 
-  const mechanicOptions = useMemo(() => MECHANICS.map((m) => ({ label: m, value: m })), [])
+  // Drives which services the price-list picker leads with — a bike wash and a
+  // bus wash are different rows, and offering both for a scooter is noise.
+  const vehicleType = useMemo(
+    () => vehicles.find((v) => v.id === formik.values.vehicleId)?.type,
+    [vehicles, formik.values.vehicleId],
+  )
+
+  // Real mechanic accounts, falling back to the hardcoded list only while none
+  // exist. This is the loop that matters: a name assigned here has to match a
+  // login created on the Staff screen, or the job is invisible in the app.
+  const { data: mechanics = [] } = useGetMechanicList()
+
+  const mechanicOptions = useMemo(
+    () => (mechanics.length > 0 ? mechanics : MECHANICS).map((m) => ({ label: m, value: m })),
+    [mechanics],
+  )
   const priorityOptions = useMemo(() => JOB_PRIORITIES.map((p) => ({ label: p, value: p })), [])
   const statusOptions = useMemo(() => JOB_STATUSES.map((s) => ({ label: s, value: s })), [])
 
@@ -140,7 +156,7 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
             <Input name="promisedAt" label="Promised date" type="date" formik={formik} isRequired />
           </div>
 
-          <JobLinesField formik={formik} />
+          <JobLinesField formik={formik} vehicleType={vehicleType} />
 
           <button type="submit" className="hidden" aria-hidden tabIndex={-1} />
         </form>

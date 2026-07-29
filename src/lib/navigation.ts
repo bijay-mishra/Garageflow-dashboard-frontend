@@ -14,6 +14,8 @@ import {
   UserCircleIcon,
   Cog6ToothIcon,
   SparklesIcon,
+  BuildingStorefrontIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline'
 
 export interface NavItem {
@@ -34,13 +36,20 @@ export const NAV: NavItem[] = [
   { to: '/customers', labelKey: 'nav.customers', icon: UsersIcon },
   { to: '/vehicles', labelKey: 'nav.vehicles', icon: TruckIcon },
   { to: '/job-cards', labelKey: 'nav.jobCards', icon: ClipboardDocumentListIcon },
+  // The price list, above the record of work done — you set up what you sell
+  // before you can look back at having sold it.
+  { to: '/services', labelKey: 'nav.services', icon: SparklesIcon },
   { to: '/service-history', labelKey: 'nav.serviceHistory', icon: WrenchScrewdriverIcon },
   { to: '/billing', labelKey: 'nav.billing', icon: BanknotesIcon },
   { to: '/reports', labelKey: 'nav.reports', icon: ChartBarIcon },
   {
     labelKey: 'nav.settings',
     icon: Cog6ToothIcon,
-    children: [{ to: '/account', labelKey: 'topbar.myAccount', icon: UserCircleIcon }],
+    children: [
+      { to: '/workshop', labelKey: 'nav.workshop', icon: BuildingStorefrontIcon },
+      { to: '/staff', labelKey: 'nav.staff', icon: UserGroupIcon },
+      { to: '/account', labelKey: 'topbar.myAccount', icon: UserCircleIcon },
+    ],
   },
 ]
 

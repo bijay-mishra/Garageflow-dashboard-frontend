@@ -16,6 +16,13 @@ export const invoiceApi = {
     requestMethod: RequestMethod.GET,
   },
 
+  /** What came in as cash, online and through the bank — the end-of-day question. */
+  getCollections: {
+    actionName: 'GET_COLLECTIONS',
+    controllerName: '/invoices/collections',
+    requestMethod: RequestMethod.GET,
+  },
+
   getInvoiceById: {
     actionName: 'GET_INVOICE_BY_ID',
     controllerName: '/invoices/{id}',
@@ -25,6 +32,17 @@ export const invoiceApi = {
   getInvoicePayments: {
     actionName: 'GET_INVOICE_PAYMENTS',
     controllerName: '/invoices/{id}/payments',
+    requestMethod: RequestMethod.GET,
+  },
+
+  /**
+   * The whole bill in one call — invoice, customer contact, vehicle, job lines
+   * and payments. The print window uses this rather than four separate requests,
+   * so the document either renders complete or not at all.
+   */
+  getInvoicePrint: {
+    actionName: 'GET_INVOICE_PRINT',
+    controllerName: '/invoices/{id}/print',
     requestMethod: RequestMethod.GET,
   },
 

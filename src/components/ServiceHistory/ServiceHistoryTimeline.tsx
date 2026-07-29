@@ -46,8 +46,21 @@ export default function ServiceHistoryTimeline({ jobs }: ServiceHistoryTimelineP
                 Mechanic: <b className="text-ink-700">{job.mechanic}</b>
               </span>
               <span>
-                Parts &amp; labour: <b className="text-ink-700">{job.lines.length} lines</b>
+                Line items: <b className="text-ink-700">{job.lines.length}</b>
               </span>
+              {/* Only shown when there is one — most jobs are parts and labour,
+                  and a permanent "Services: 0" is noise on every row. */}
+              {job.lines.some((line) => line.kind === 'service') && (
+                <span>
+                  Services:{' '}
+                  <b className="text-ink-700">
+                    {job.lines
+                      .filter((line) => line.kind === 'service')
+                      .map((line) => line.description)
+                      .join(', ')}
+                  </b>
+                </span>
+              )}
             </div>
           </div>
         </div>

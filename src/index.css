@@ -292,3 +292,85 @@
 .dark .text-emerald-600 {
   color: #34d399;
 }
+
+/* ── Printing ────────────────────────────────────────────────────────────────
+   Only the invoice document is meant to reach paper. Everything else in the app
+   is screen furniture, and the browser prints all of it unless told otherwise.
+
+   The rules live here rather than in a Tailwind `print:` variant because two of
+   them — @page and the colour-adjust forcing — have no utility equivalent, and
+   splitting the print stylesheet across two places is how it rots. */
+
+@media print {
+  /* A4 with a 12mm margin. The workshop's letterhead needs the width; a smaller
+     margin risks the printer's own unprintable edge clipping the totals. */
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    /* The app runs on a 14px root. Print in points instead so the document is
+       sized to paper rather than to somebody's screen. */
+    font-size: 10pt;
+  }
+
+  /* Chrome and Safari drop backgrounds and borders by default to save ink. On a
+     tax invoice the rules under the table headers are structure, not decoration. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Anything the app draws around the document: the sidebar, the topbar, toasts,
+     the print toolbar itself. */
+  .no-print,
+  aside,
+  header.topbar,
+  .toast-container {
+    display: none !important;
+  }
+
+  /* The scroll containers the layout relies on would otherwise clip the document
+     to one viewport-worth and print a single page of a longer bill. */
+  html,
+  body,
+  #root,
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .invoice-doc {
+    /* The page box already provides the margin. */
+    width: auto;
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  /* A long job splits across pages; a row split down the middle does not read. */
+  tr,
+  img {
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Signature and totals should not be orphaned onto a page of their own. */
+  tfoot,
+  footer {
+    break-inside: avoid;
+  }
+}
+
+/* On screen the document is a preview of the sheet, so it carries the padding
+   that @page provides on paper. */
+.invoice-doc {
+  padding: 12mm;
+}

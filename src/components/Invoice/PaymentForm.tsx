@@ -20,7 +20,7 @@ export default function PaymentForm({ invoice, onClose }: PaymentFormProps) {
 
   const formik = useFormik<PaymentFormType>({
     // Settling the balance in full is the common case, so it is prefilled.
-    initialValues: { amount: due, method: invoice.method ?? 'Cash' },
+    initialValues: { amount: due, method: invoice.method ?? 'Cash', reference: '' },
     validationSchema: useMemo(() => paymentFormSchema(due), [due]),
     onSubmit: async (values) => {
       try {
@@ -65,6 +65,18 @@ export default function PaymentForm({ invoice, onClose }: PaymentFormProps) {
           <Input name="amount" label="Amount" type="number" formik={formik} min={0} max={due} isRequired />
           <FormikDropdown name="method" label="Method" formik={formik} options={methodOptions} isClearable={false} />
         </div>
+
+        {/* Only asked for when there is something to reference. Cash has no
+            transaction id, and an empty box on every payment trains people to
+            skip the one that matters. */}
+        {formik.values.method !== 'Cash' && (
+          <Input
+            name="reference"
+            label="Transaction / slip number"
+            formik={formik}
+            placeholder="Optional — the id the customer showed you"
+          />
+        )}
 
         <div className="flex gap-2">
           <button
