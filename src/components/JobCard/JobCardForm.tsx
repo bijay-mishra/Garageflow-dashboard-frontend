@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { FormikProvider, useFormik } from 'formik'
 import Modal from '@/components/common/modals/Modal'
 import Input from '@/components/common/form/Input'
+import DateInput from '@/components/common/form/DateInput'
 import FormikDropdown from '@/components/common/form/FormikDropdown'
 import { Spinner } from '@/components/common/loaders/States'
 import { useGetVehicleList } from '@/components/Vehicle/vehicle-query'
@@ -153,7 +154,10 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
               <FormikDropdown name="status" label="Status" formik={formik} options={statusOptions} isClearable={false} />
             )}
             <Input name="odometer" label="Odometer (km)" type="number" formik={formik} min={0} isRequired />
-            <Input name="promisedAt" label="Promised date" type="date" formik={formik} isRequired />
+            {/* Follows the interface language: a native picker in English,
+                BS year/month/day selects in Nepali. Either way the value on the
+                form is an ISO Gregorian day, so nothing downstream changes. */}
+            <DateInput name="promisedAt" label="Promised date" formik={formik} isRequired />
           </div>
 
           <JobLinesField formik={formik} vehicleType={vehicleType} />

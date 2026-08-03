@@ -3,7 +3,7 @@ import { TruckIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge, { type BadgeTone } from '@/components/common/Badge'
 import EntityActions from '@/components/common/buttons/EntityActions'
-import { formatDate, formatNumber } from '@/lib/format'
+import { useDateFormat } from '@/hooks/useDateFormat'
 import type { FuelType, IVehicle, VehicleType } from './vehicle-schema'
 
 /** Fuel type → badge colour. Electric reads green, diesel stays neutral. */
@@ -43,6 +43,8 @@ export default function VehicleTable({
   onStateChange,
   loading,
 }: VehicleTableProps) {
+  const { date, number } = useDateFormat()
+
   const columns = useMemo<Column<IVehicle>[]>(
     () => [
       {
@@ -92,13 +94,13 @@ export default function VehicleTable({
         header: 'Odometer',
         align: 'right',
         sortValue: (v) => v.odometer,
-        render: (v) => <span className="font-semibold text-ink-700">{formatNumber(v.odometer)} km</span>,
+        render: (v) => <span className="font-semibold text-ink-700">{number(v.odometer)} km</span>,
       },
       {
         key: 'lastServiceDate',
         header: 'Last service',
         sortValue: (v) => v.lastServiceDate,
-        render: (v) => <span className="text-ink-500">{formatDate(v.lastServiceDate)}</span>,
+        render: (v) => <span className="text-ink-500">{date(v.lastServiceDate)}</span>,
       },
       {
         key: 'actions',
@@ -114,7 +116,7 @@ export default function VehicleTable({
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, date, number],
   )
 
   return (

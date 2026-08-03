@@ -1,8 +1,8 @@
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import Badge from '@/components/common/Badge'
 import { jobStatusTone } from '@/lib/status'
-import { formatDate, formatNumber, formatRs } from '@/lib/format'
 import type { IJobCard } from '@/components/JobCard/jobcard-schema'
+import { useDateFormat } from '@/hooks/useDateFormat'
 
 interface ServiceHistoryTimelineProps {
   jobs: IJobCard[]
@@ -10,6 +10,8 @@ interface ServiceHistoryTimelineProps {
 
 /** Vertical timeline of completed work — the connecting line is the `before:` rule. */
 export default function ServiceHistoryTimeline({ jobs }: ServiceHistoryTimelineProps) {
+  const { date, rs, number } = useDateFormat()
+
   return (
     <div className="relative space-y-4 before:absolute before:left-[19px] before:top-2 before:h-[calc(100%-1rem)] before:w-px before:bg-ink-100">
       {jobs.map((job) => (
@@ -31,8 +33,8 @@ export default function ServiceHistoryTimeline({ jobs }: ServiceHistoryTimelineP
               </div>
 
               <div className="text-right">
-                <p className="font-bold text-ink-900">{formatRs(job.total)}</p>
-                <p className="text-xs text-ink-400">{formatDate(job.completedAt)}</p>
+                <p className="font-bold text-ink-900">{rs(job.total)}</p>
+                <p className="text-xs text-ink-400">{date(job.completedAt)}</p>
               </div>
             </div>
 
@@ -40,7 +42,7 @@ export default function ServiceHistoryTimeline({ jobs }: ServiceHistoryTimelineP
 
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 border-t border-ink-100 pt-3 text-xs text-ink-500">
               <span>
-                Odometer: <b className="text-ink-700">{formatNumber(job.odometer)} km</b>
+                Odometer: <b className="text-ink-700">{number(job.odometer)} km</b>
               </span>
               <span>
                 Mechanic: <b className="text-ink-700">{job.mechanic}</b>

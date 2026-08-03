@@ -86,7 +86,10 @@ export default function Topbar({ collapsed, onMenu, onToggleCollapse }: TopbarPr
         {/* Tenant company + active branch */}
         <div className="hidden min-w-0 shrink-0 leading-tight sm:block">
           <p className="truncate text-sm font-bold text-white">{company.name}</p>
-          <p className="truncate text-xs text-brand-200">{branch.name}</p>
+          {/* A workshop with no branches on record shows nothing here rather
+              than a placeholder — this line *is* the branch, and inventing a
+              name would put a location in the header that does not exist. */}
+          {branch && <p className="truncate text-xs text-brand-200">{branch.name}</p>}
         </div>
 
         {/* Global search */}

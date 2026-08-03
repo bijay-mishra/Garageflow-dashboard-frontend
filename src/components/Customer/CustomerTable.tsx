@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { UsersIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import EntityActions from '@/components/common/buttons/EntityActions'
-import { formatDate, formatRs } from '@/lib/format'
+import { useDateFormat } from '@/hooks/useDateFormat'
 import type { ICustomer } from './customer-schema'
 
 interface CustomerTableProps extends ServerTableProps {
@@ -26,6 +26,8 @@ export default function CustomerTable({
   onStateChange,
   loading,
 }: CustomerTableProps) {
+  const { date, rs } = useDateFormat()
+
   const columns = useMemo<Column<ICustomer>[]>(
     () => [
       {
@@ -58,13 +60,13 @@ export default function CustomerTable({
         header: 'Total spent',
         align: 'right',
         sortValue: (c) => c.totalSpent,
-        render: (c) => <span className="font-semibold text-ink-900">{formatRs(c.totalSpent)}</span>,
+        render: (c) => <span className="font-semibold text-ink-900">{rs(c.totalSpent)}</span>,
       },
       {
         key: 'createdAt',
         header: 'Since',
         sortValue: (c) => c.createdAt,
-        render: (c) => <span className="text-ink-500">{formatDate(c.createdAt)}</span>,
+        render: (c) => <span className="text-ink-500">{date(c.createdAt)}</span>,
       },
       {
         key: 'actions',
@@ -75,7 +77,7 @@ export default function CustomerTable({
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, date, rs],
   )
   return (
     <DataTable

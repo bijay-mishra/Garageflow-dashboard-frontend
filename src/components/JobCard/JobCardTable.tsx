@@ -4,7 +4,7 @@ import DataTable, { type Column, type ServerTableProps } from '@/components/comm
 import Badge from '@/components/common/Badge'
 import EntityActions from '@/components/common/buttons/EntityActions'
 import { priorityTone } from '@/lib/status'
-import { formatDate, formatRs } from '@/lib/format'
+import { useDateFormat } from '@/hooks/useDateFormat'
 import JobStatusSelect from './JobStatusSelect'
 import { JOB_PRIORITIES, JOB_STATUSES, type IJobCard, type JobStatus } from './jobcard-schema'
 
@@ -27,6 +27,8 @@ export default function JobCardTable({
   onStateChange,
   loading,
 }: JobCardTableProps) {
+  const { date, rs } = useDateFormat()
+
   const columns = useMemo<Column<IJobCard>[]>(
     () => [
       {
@@ -67,14 +69,14 @@ export default function JobCardTable({
         key: 'promisedAt',
         header: 'Promised',
         sortValue: (j) => j.promisedAt,
-        render: (j) => <span className="text-ink-500">{formatDate(j.promisedAt)}</span>,
+        render: (j) => <span className="text-ink-500">{date(j.promisedAt)}</span>,
       },
       {
         key: 'total',
         header: 'Total',
         align: 'right',
         sortValue: (j) => j.total,
-        render: (j) => <span className="font-semibold text-ink-900">{formatRs(j.total)}</span>,
+        render: (j) => <span className="font-semibold text-ink-900">{rs(j.total)}</span>,
       },
       {
         key: 'actions',
@@ -85,7 +87,7 @@ export default function JobCardTable({
         ),
       },
     ],
-    [onEdit, onDelete, onStatusChange],
+    [onEdit, onDelete, onStatusChange, date, rs],
   )
 
   return (

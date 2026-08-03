@@ -3,7 +3,7 @@ import { BanknotesIcon, PrinterIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge, { type BadgeTone } from '@/components/common/Badge'
 import { invoiceStatusTone } from '@/lib/status'
-import { formatDate, formatRs } from '@/lib/format'
+import { useDateFormat } from '@/hooks/useDateFormat'
 import type { IInvoice, PaymentMethod } from './invoice-schema'
 
 /**
@@ -36,6 +36,8 @@ export default function InvoiceTable({
   onStateChange,
   loading,
 }: InvoiceTableProps) {
+  const { date, rs } = useDateFormat()
+
   const columns = useMemo<Column<IInvoice>[]>(
     () => [
       {
@@ -54,14 +56,14 @@ export default function InvoiceTable({
         key: 'issuedAt',
         header: 'Date',
         sortValue: (i) => i.issuedAt,
-        render: (i) => <span className="text-ink-500">{formatDate(i.issuedAt)}</span>,
+        render: (i) => <span className="text-ink-500">{date(i.issuedAt)}</span>,
       },
       {
         key: 'total',
         header: 'Total',
         align: 'right',
         sortValue: (i) => i.total,
-        render: (i) => <span className="font-semibold text-ink-900">{formatRs(i.total)}</span>,
+        render: (i) => <span className="font-semibold text-ink-900">{rs(i.total)}</span>,
       },
       {
         key: 'due',
@@ -69,7 +71,7 @@ export default function InvoiceTable({
         align: 'right',
         sortValue: (i) => i.due,
         render: (i) => (
-          <span className="font-semibold text-rose-600">{i.due > 0 ? formatRs(i.due) : '—'}</span>
+          <span className="font-semibold text-rose-600">{i.due > 0 ? rs(i.due) : '—'}</span>
         ),
       },
       {
@@ -126,7 +128,7 @@ export default function InvoiceTable({
         ),
       },
     ],
-    [onRecordPayment],
+    [onRecordPayment, date, rs],
   )
 
   return (

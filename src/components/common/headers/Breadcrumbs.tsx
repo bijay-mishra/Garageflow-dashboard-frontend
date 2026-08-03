@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { HomeIcon } from '@heroicons/react/24/outline'
-import { flatNav, groupOf, EXTRA_PAGES } from '@/lib/navigation'
+import { EXTRA_PAGES } from '@/lib/navigation'
+import { useMenu } from '@/context/MenuContext'
 import { useLang } from '@/context/LanguageContext'
 
 /** Prettify an unknown path segment: "job-cards" → "Job Cards". */
@@ -19,11 +20,18 @@ function prettify(segment: string): string {
 export default function Breadcrumbs({ current }: { current?: string }) {
   const { pathname } = useLocation()
   const { t } = useLang()
+  const { find, parentOf, label } = useMenu()
   const segments = pathname.split('/').filter(Boolean)
 
   const labelFor = (segment: string) => {
-    const match = [...flatNav(), ...EXTRA_PAGES].find((n) => n.to === `/${segment}`)
-    return match ? t(match.labelKey) : prettify(segment)
+    // The server's menu first — it is already in the right language and is the
+    // same list the sidebar drew. EXTRA_PAGES covers what the menu never lists,
+    // like /plans.
+    const item = find(`/${segment}`)
+    if (item) return label(item)
+
+    const extra = EXTRA_PAGES.find((n) => n.to === `/${segment}`)
+    return extra ? t(extra.labelKey) : prettify(segment)
   }
 
   return (
@@ -43,13 +51,13 @@ export default function Breadcrumbs({ current }: { current?: string }) {
           const to = `/${segments.slice(0, i + 1).join('/')}`
           // A page that lives under a sidebar group gets that group as a crumb,
           // so "/account" reads Home / Settings / My Account.
-          const parent = i === 0 ? groupOf(to) : undefined
+          const parent = i === 0 ? parentOf(to) : undefined
           return (
             <span key={to} className="flex min-w-0 items-center gap-1.5">
               {parent && (
                 <>
                   <span className="text-ink-300">/</span>
-                  <span className="truncate text-ink-500">{t(parent.labelKey)}</span>
+                  <span className="truncate text-ink-500">{label(parent)}</span>
                 </>
               )}
               <span className="text-ink-300">/</span>

@@ -7,7 +7,8 @@ import { workshopInfo } from '@/data/seed'
 import { useGetDashboardSummary } from '@/components/Dashboard/dashboard-query'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
-import { HOME, NAV, type NavItem } from '@/lib/navigation'
+import { useMenu, type MenuNode } from '@/context/MenuContext'
+import { iconFor } from '@/lib/menuIcons'
 
 interface SidebarProps {
   open: boolean
@@ -15,9 +16,20 @@ interface SidebarProps {
   onClose: () => void
 }
 
+/**
+ * The menu, as the server assembled it for this person.
+ *
+ * Nothing here decides what appears. The rows, their order, their wording and
+ * their icons all arrive from GET /menus, already filtered by what the company
+ * bought and what this role has been granted. That used to be a hardcoded array
+ * compiled into the bundle, so every workshop got the same menu and "the front
+ * desk shouldn't see the takings" was a feature request rather than a setting.
+ */
 export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
   const { t } = useLang()
   const { user } = useAuth()
+  const { tree, loading } = useMenu()
+
   // The badge is one number, so it comes from the dashboard aggregate rather
   // than from downloading every job card to count them here. NotificationMenu
   // already holds this query, so the sidebar costs no extra request.
@@ -79,19 +91,34 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
 
         {/* Nav */}
         <nav className={clsx('flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-3', collapsed && 'lg:px-2')}>
-          {/* Home stands on its own, above the module list. */}
-          <Item item={HOME} collapsed={collapsed} onNavigate={onClose} />
-
-          <p className={clsx('px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-wider text-ink-400', hideOnRail)}>
-            {t('sidebar.modules')}
-          </p>
-
-          {NAV.map((item) =>
-            item.children ? (
-              <NavGroup key={item.labelKey} item={item} collapsed={collapsed} onNavigate={onClose} />
-            ) : (
-              <Item key={item.to} item={item} collapsed={collapsed} onNavigate={onClose} badge={item.to === '/job-cards' ? openJobs : 0} />
-            ),
+          {loading ? (
+            // Grey bars rather than an empty rail. A menu that arrives a beat
+            // late should look like it is arriving, not like it is missing.
+            <div className="space-y-2 pt-2">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="h-9 animate-pulse rounded-md bg-ink-100" />
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* No "MODULES" heading above this. It labelled a list that needs
+                  no label — there is one nav in the sidebar and everybody can
+                  see what it is — and cost a row of vertical space on every
+                  screen to say so. */}
+              {tree.map((item) =>
+                item.children.length > 0 ? (
+                  <NavGroup key={item.key} item={item} collapsed={collapsed} onNavigate={onClose} />
+                ) : (
+                  <Item
+                    key={item.key}
+                    item={item}
+                    collapsed={collapsed}
+                    onNavigate={onClose}
+                    badge={item.route === '/job-cards' ? openJobs : 0}
+                  />
+                ),
+              )}
+            </>
           )}
         </nav>
 
@@ -120,22 +147,25 @@ function Item({
   badge = 0,
   depth = 0,
 }: {
-  item: NavItem
+  item: MenuNode
   collapsed: boolean
   onNavigate: () => void
   badge?: number
   depth?: number
 }) {
-  const { t } = useLang()
-  const Icon = item.icon
+  const { label } = useMenu()
+  const Icon = iconFor(item.icon)
   const hideOnRail = collapsed ? 'lg:hidden' : ''
+  const text = label(item)
 
   return (
     <NavLink
-      to={item.to!}
-      end={item.end}
+      to={item.route}
+      // Only home matches by prefix everywhere else, so it needs the exact rule
+      // or it stays lit on every page.
+      end={item.route === '/'}
       onClick={onNavigate}
-      title={collapsed ? t(item.labelKey) : undefined}
+      title={collapsed ? text : undefined}
       className={({ isActive }) =>
         clsx(
           'nav-link',
@@ -159,7 +189,7 @@ function Item({
               <span className="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-brand-600 ring-2 ring-ink-50 lg:block" />
             )}
           </span>
-          <span className={clsx('flex-1 truncate', hideOnRail)}>{t(item.labelKey)}</span>
+          <span className={clsx('flex-1 truncate', hideOnRail)}>{text}</span>
           {badge > 0 && (
             <span className={clsx('rounded-full bg-brand-600 px-1.5 py-0.5 text-xs font-bold text-white', hideOnRail)}>
               {badge > 99 ? '99+' : badge}
@@ -176,13 +206,21 @@ function Item({
  * one of its children is the current route; on the rail it links straight to
  * the first child, since there is no room to expand.
  */
-function NavGroup({ item, collapsed, onNavigate }: { item: NavItem; collapsed: boolean; onNavigate: () => void }) {
-  const { t } = useLang()
+function NavGroup({
+  item,
+  collapsed,
+  onNavigate,
+}: {
+  item: MenuNode
+  collapsed: boolean
+  onNavigate: () => void
+}) {
+  const { label } = useMenu()
   const { pathname } = useLocation()
-  const children = item.children ?? []
-  const hasActiveChild = children.some((c) => c.to && pathname.startsWith(c.to))
+  const children = item.children
+  const hasActiveChild = children.some((c) => c.route && pathname.startsWith(c.route))
   const [open, setOpen] = useState(hasActiveChild)
-  const Icon = item.icon
+  const Icon = iconFor(item.icon)
   const expanded = open || hasActiveChild
 
   if (children.length === 0) return null
@@ -190,7 +228,7 @@ function NavGroup({ item, collapsed, onNavigate }: { item: NavItem; collapsed: b
   if (collapsed) {
     return (
       <div className="hidden lg:block">
-        <Item item={{ ...children[0], icon: Icon, labelKey: item.labelKey }} collapsed onNavigate={onNavigate} />
+        <Item item={{ ...children[0], icon: item.icon }} collapsed onNavigate={onNavigate} />
       </div>
     )
   }
@@ -204,14 +242,14 @@ function NavGroup({ item, collapsed, onNavigate }: { item: NavItem; collapsed: b
         className={clsx('nav-link w-full', hasActiveChild && 'text-ink-900')}
       >
         <Icon className="h-5 w-5 shrink-0" />
-        <span className="flex-1 truncate text-left">{t(item.labelKey)}</span>
+        <span className="flex-1 truncate text-left">{label(item)}</span>
         <ChevronDownIcon className={clsx('h-4 w-4 shrink-0 transition-transform', expanded && 'rotate-180')} />
       </button>
 
       {expanded && (
         <div className="mt-1 space-y-1 border-l border-ink-200 pl-2">
           {children.map((child) => (
-            <Item key={child.to} item={child} collapsed={false} onNavigate={onNavigate} depth={1} />
+            <Item key={child.key} item={child} collapsed={false} onNavigate={onNavigate} depth={1} />
           ))}
         </div>
       )}

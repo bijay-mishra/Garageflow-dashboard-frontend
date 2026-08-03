@@ -12,7 +12,9 @@ import { useGetCustomerList } from '@/components/Customer/customer-query'
 import { useGetVehicleList } from '@/components/Vehicle/vehicle-query'
 import { useGetJobCardList } from '@/components/JobCard/jobcard-query'
 import { useLang } from '@/context/LanguageContext'
-import { flatNav, EXTRA_PAGES } from '@/lib/navigation'
+import { EXTRA_PAGES } from '@/lib/navigation'
+import { useMenu } from '@/context/MenuContext'
+import { iconFor } from '@/lib/menuIcons'
 
 interface Hit {
   key: string
@@ -43,14 +45,23 @@ export default function GlobalSearch() {
   const { data: customers = [] } = useGetCustomerList(indexEnabled)
   const { data: vehicles = [] } = useGetVehicleList(indexEnabled)
   const { data: jobs = [] } = useGetJobCardList(indexEnabled)
+  const { flat, label: menuLabel } = useMenu()
 
   const hits = useMemo<Hit[]>(() => {
     const term = q.trim().toLowerCase()
     if (!term) return []
     const out: Hit[] = []
 
-    // flatNav() already drops group parents, so every entry has a route.
-    for (const p of [...flatNav(), ...EXTRA_PAGES]) {
+    // The server's menu, so search can never offer a page the sidebar hid —
+    // `flat` already drops group parents, so every entry has a route.
+    for (const p of flat) {
+      const label = menuLabel(p)
+      if (label.toLowerCase().includes(term) || p.route.includes(term))
+        out.push({ key: `page:${p.route}`, group: t('search.pages'), label, icon: iconFor(p.icon), to: p.route })
+    }
+
+    // Pages the menu never lists, like /plans.
+    for (const p of EXTRA_PAGES) {
       const to = p.to!
       const label = t(p.labelKey)
       if (label.toLowerCase().includes(term) || to.includes(term))
@@ -107,7 +118,7 @@ export default function GlobalSearch() {
     // Cap each group so one entity type can't flood the dropdown.
     const seen: Record<string, number> = {}
     return out.filter((h) => (seen[h.group] = (seen[h.group] ?? 0) + 1) <= PER_GROUP)
-  }, [q, customers, vehicles, jobs, t])
+  }, [q, customers, vehicles, jobs, t, flat, menuLabel])
 
   const groups = useMemo(() => {
     const map = new Map<string, Hit[]>()

@@ -1,5 +1,6 @@
 import { workshopInfo } from '@/data/seed'
 import { formatDate, formatRs } from '@/lib/format'
+import { toBs } from '@/lib/nepaliDate'
 import type { IWorkshop } from '@/components/Workshop/workshop-query'
 import type { IInvoicePrint } from './invoice-schema'
 
@@ -29,6 +30,10 @@ interface InvoiceDocumentProps {
 export default function InvoiceDocument({ doc, workshop }: InvoiceDocumentProps) {
   const { invoice, payments, lines } = doc
 
+  // Null outside the conversion range, in which case the Gregorian line stands
+  // alone rather than the bill carrying a date that is a guess.
+  const issuedBs = toBs(invoice.issuedAt)
+
   // Server record first, then the compiled-in constants. The fallback exists for
   // the moment before the workshop query resolves; a bill with no name on it is
   // worse than a bill with a slightly stale one.
@@ -55,7 +60,16 @@ export default function InvoiceDocument({ doc, workshop }: InvoiceDocumentProps)
         <div className="shrink-0 text-right">
           <p className="text-[13pt] font-bold uppercase tracking-widest">Tax Invoice</p>
           <p className="mt-1 text-[11pt] font-bold">{invoice.id}</p>
+          {/* Both calendars, always — whatever the interface language is set
+              to. This is the one document that leaves the building: the
+              customer reads dates in BS, the tax office wants AD, and a bill
+              carrying only one makes somebody convert by hand. */}
           <p className="text-[9pt]">{formatDate(invoice.issuedAt)}</p>
+          {issuedBs && (
+            <p className="text-[8pt] text-ink-500">
+              {issuedBs.day} {issuedBs.monthName} {issuedBs.year} BS
+            </p>
+          )}
         </div>
       </header>
 

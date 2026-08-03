@@ -3,10 +3,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { setSessionExpiredHandler } from '@/lib/api-request'
 import {
   clearSession,
+  forgetImpersonation,
   getAccessToken,
   getStoredUser,
+  mustSetPassword as readMustSetPassword,
   saveSession,
   saveUser,
+  setMustSetPassword as storeMustSetPassword,
   type StoredUser,
 } from '@/lib/authStorage'
 
@@ -14,8 +17,20 @@ export type AuthUser = StoredUser
 
 interface AuthCtx {
   user: AuthUser | null
+  /**
+   * True while this account is still on a password somebody else set. Nothing
+   * but the "choose a password" screen renders until it clears.
+   */
+  mustSetPassword: boolean
   /** Called by the login form once the API has returned a session. */
-  signIn: (session: { accessToken: string; refreshToken: string; user: AuthUser }) => void
+  signIn: (session: {
+    accessToken: string
+    refreshToken: string
+    user: AuthUser
+    mustSetPassword?: boolean
+  }) => void
+  /** Called once the account has chosen its own password. */
+  passwordWasSet: () => void
   /** Clears the local session. Revoking the refresh token is the caller's job. */
   signOut: () => void
   /** Replaces the cached user, e.g. after `/auth/me` or a profile edit. */
@@ -37,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // before the token has been checked.
   const queryClient = useQueryClient()
   const [user, setUser] = useState<AuthUser | null>(() => (getAccessToken() ? getStoredUser() : null))
+  const [pending, setPending] = useState(() => Boolean(getAccessToken()) && readMustSetPassword())
 
   const signIn: AuthCtx['signIn'] = useCallback(
     (session) => {
@@ -44,11 +60,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // sign-out: clearing while the dashboard is still mounted would make every
       // mounted query refetch against a session that no longer exists.
       queryClient.clear()
+
+      // Signing in fresh ends any impersonation, even one this tab was in the
+      // middle of. Left behind, the parked operator session would be restored
+      // later over whoever signs in now, and the banner would claim an ordinary
+      // session was viewing somebody else's workshop.
+      forgetImpersonation()
+
       saveSession(session)
       setUser(session.user)
+      setPending(Boolean(session.mustSetPassword))
     },
     [queryClient],
   )
+
+  const passwordWasSet = useCallback(() => {
+    storeMustSetPassword(false)
+    setPending(false)
+  }, [])
 
   const replaceUser: AuthCtx['setUser'] = useCallback((next) => {
     saveUser(next)
@@ -57,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(() => {
     clearSession()
+    forgetImpersonation()
     setUser(null)
+    setPending(false)
   }, [])
 
   const updateProfile: AuthCtx['updateProfile'] = useCallback((patch) => {
@@ -72,7 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // When the request layer gives up on refreshing, the session is over. This is
   // the bridge from that non-React code back into React state.
   useEffect(() => {
-    setSessionExpiredHandler(() => setUser(null))
+    setSessionExpiredHandler(() => {
+      setUser(null)
+      setPending(false)
+    })
     return () => setSessionExpiredHandler(null)
   }, [])
 
@@ -81,8 +115,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // for that; a dead token 401s there and lands back in signOut above.
 
   const value = useMemo(
-    () => ({ user, signIn, signOut, setUser: replaceUser, updateProfile }),
-    [user, signIn, signOut, replaceUser, updateProfile],
+    () => ({
+      user,
+      mustSetPassword: pending,
+      signIn,
+      passwordWasSet,
+      signOut,
+      setUser: replaceUser,
+      updateProfile,
+    }),
+    [user, pending, signIn, passwordWasSet, signOut, replaceUser, updateProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

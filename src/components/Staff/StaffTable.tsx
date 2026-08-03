@@ -3,7 +3,7 @@ import { UsersIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge, { type BadgeTone } from '@/components/common/Badge'
 import EntityActions from '@/components/common/buttons/EntityActions'
-import { formatDate } from '@/lib/format'
+import { useDateFormat } from '@/hooks/useDateFormat'
 import type { IStaff, UserRole } from './staff-schema'
 
 /** Role → badge colour. The three dashboard roles share the blue end. */
@@ -30,6 +30,8 @@ export default function StaffTable({
   onStateChange,
   loading,
 }: StaffTableProps) {
+  const { date } = useDateFormat()
+
   const columns = useMemo<Column<IStaff>[]>(
     () => [
       {
@@ -47,8 +49,11 @@ export default function StaffTable({
       {
         key: 'role',
         header: 'Role',
-        sortValue: (u) => u.role,
-        render: (u) => <Badge tone={roleTone[u.role]}>{u.role}</Badge>,
+        sortValue: (u) => u.companyRoleName || u.role,
+        // The workshop's own name for the role, coloured by the product role it
+        // is based on — so a "CEO" backed by Owner reads with the same weight as
+        // an owner, which is what it is.
+        render: (u) => <Badge tone={roleTone[u.role]}>{u.companyRoleName || u.role}</Badge>,
       },
       {
         key: 'mechanicName',
@@ -76,7 +81,7 @@ export default function StaffTable({
         sortValue: (u) => u.lastLoginAt,
         render: (u) =>
           u.lastLoginAt ? (
-            <span className="text-ink-500">{formatDate(u.lastLoginAt)}</span>
+            <span className="text-ink-500">{date(u.lastLoginAt)}</span>
           ) : (
             <span className="text-xs text-ink-400">Never</span>
           ),
@@ -102,7 +107,7 @@ export default function StaffTable({
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, date],
   )
 
   return (

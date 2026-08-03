@@ -5,6 +5,7 @@ import Input from '@/components/common/form/Input'
 import FormikDropdown from '@/components/common/form/FormikDropdown'
 import { Spinner } from '@/components/common/loaders/States'
 import { useGetCustomerList } from '@/components/Customer/customer-query'
+import { useGetMenuAccess } from '@/components/Menu/menu-query'
 import { useAddStaff, useUpdateStaff } from './staff-query'
 import {
   USER_ROLES,
@@ -31,14 +32,31 @@ export default function StaffForm({ editing, onClose }: StaffFormProps) {
   const addStaff = useAddStaff()
   const updateStaff = useUpdateStaff()
 
+  // The company's own roles, from Role setup. Same query the roles screen uses,
+  // so opening this form after that one costs nothing.
+  const { data: matrix } = useGetMenuAccess()
+  const companyRoles = useMemo(() => matrix?.roles ?? [], [matrix])
+
   const formik = useFormik<StaffFormType>({
     initialValues: toStaffFormValues(editing),
     validationSchema: staffFormSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      // The dropdown holds a role *name*, which may be one this workshop
+      // invented. What the account is authorised as is that role's base — and
+      // only a role of the company's own is worth storing a name for, since a
+      // built-in's name and its base are the same string.
+      const chosen = companyRoles.find((r) => r.name === values.companyRoleName)
+
+      const payload = {
+        ...values,
+        role: (chosen?.baseRole ?? values.companyRoleName) as StaffFormType['role'],
+        companyRoleName: chosen && !chosen.isBuiltIn ? chosen.name : '',
+      }
+
       try {
-        if (editing) await updateStaff.mutateAsync({ id: editing.id, ...values })
-        else await addStaff.mutateAsync(values)
+        if (editing) await updateStaff.mutateAsync({ id: editing.id, ...payload })
+        else await addStaff.mutateAsync(payload)
         onClose()
       } catch {
         /* handled by the mutation's onError */
@@ -46,13 +64,32 @@ export default function StaffForm({ editing, onClose }: StaffFormProps) {
     },
   })
 
-  const role = formik.values.role
+  const selectedRole = formik.values.companyRoleName
+
+  // What the server will authorise this account as, which is what the rest of
+  // the form branches on — a "Parts runner" based on Mechanic still needs the
+  // name their job cards are assigned under.
+  const role =
+    companyRoles.find((r) => r.name === selectedRole)?.baseRole ?? selectedRole
 
   // Only offered for a Customer login. The list is small and already cached by
   // the customers screen, so this costs nothing on most visits.
   const { data: customers = [], isLoading: loadingCustomers } = useGetCustomerList(role === 'Customer')
 
-  const roleOptions = useMemo(() => USER_ROLES.map((r) => ({ label: r, value: r })), [])
+  const roleOptions = useMemo(() => {
+    // A customer login is not a workshop role and never appears in Role setup —
+    // it speaks for one customer and sees only their own cars.
+    const named = companyRoles.map((r) => ({
+      label: r.isBuiltIn ? r.name : `${r.name} (${r.baseRole})`,
+      value: r.name,
+    }))
+
+    // Before the roles load, the four the product ships. The form is usable
+    // immediately and gains the company's own the moment they arrive.
+    const fallback = USER_ROLES.filter((r) => r !== 'Customer').map((r) => ({ label: r, value: r }))
+
+    return [...(named.length > 0 ? named : fallback), { label: 'Customer', value: 'Customer' }]
+  }, [companyRoles])
 
   const customerOptions = useMemo(
     () => customers.map((c) => ({ label: c.name, value: c.id })),
@@ -96,7 +133,7 @@ export default function StaffForm({ editing, onClose }: StaffFormProps) {
         </div>
 
         <FormikDropdown
-          name="role"
+          name="companyRoleName"
           label="Role"
           formik={formik}
           options={roleOptions}

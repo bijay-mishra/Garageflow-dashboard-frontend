@@ -30,12 +30,23 @@ export function formatNumber(n: number): string {
   return n.toLocaleString('en-IN')
 }
 
-/** e.g. "2026-07-12" -> "12 Jul 2026" */
+/**
+ * e.g. "2026-07-12" -> "2026/07/12"
+ *
+ * Always Gregorian. For anything a workshop reads, use `useDateFormat().date`
+ * instead — this one is for the operator console, which is not translated and
+ * works across companies that do not share a calendar.
+ */
 export function formatDate(iso: string | null): string {
   if (!iso) return '—'
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  return (
+    `${d.getFullYear()}/` +
+    `${String(d.getMonth() + 1).padStart(2, '0')}/` +
+    `${String(d.getDate()).padStart(2, '0')}`
+  )
 }
 
 /** e.g. relative "2h ago" / "3d ago". */

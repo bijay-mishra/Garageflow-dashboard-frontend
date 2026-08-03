@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import ImpersonationBanner from '@/components/SuperAdmin/ImpersonationBanner'
 import { useGetCurrentUser } from '@/components/Auth/auth-query'
 import { useAuth } from '@/context/AuthContext'
 
@@ -30,6 +31,10 @@ export default function Layout() {
     <div className="min-h-screen bg-ink-50">
       <Sidebar open={mobileOpen} collapsed={collapsed} onClose={() => setMobileOpen(false)} />
       <div className={collapsed ? 'lg:pl-20' : 'lg:pl-72'}>
+        {/* Above the topbar, in flow rather than fixed — the sidebar is
+            `fixed inset-y-0`, so a pinned strip would sit on top of it. Renders
+            nothing at all in an ordinary session. */}
+        <ImpersonationBanner />
         <Topbar collapsed={collapsed} onMenu={() => setMobileOpen(true)} onToggleCollapse={() => setCollapsed((c) => !c)} />
         {/* Full-bleed: tables should use the whole viewport width. */}
         <main className="w-full px-3 py-4 sm:px-4 lg:px-5">

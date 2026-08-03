@@ -198,30 +198,33 @@ function SecurityTab() {
         </form>
       </Panel>
 
-      <Panel title="Forgot your password?" subtitle="Send a reset link to your email">
+      <Panel title="Forgot your password?" subtitle="Email a code to yourself instead">
         <p className="text-sm text-ink-500">
-          If you don't remember your current password, we can email a secure link to{' '}
-          <span className="font-semibold text-ink-700">{user?.email}</span>.
+          The form above needs your current password. If you don't remember it, we can email a
+          six-digit code to <span className="font-semibold text-ink-700">{user?.email}</span> and
+          take you to the reset screen.
         </p>
 
-        {forgotPassword.isSuccess ? (
-          <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-            {forgotPassword.data?.data?.message}
-          </p>
-        ) : (
-          <button
-            className="btn-ghost mt-4"
-            disabled={forgotPassword.isPending || !user}
-            onClick={() =>
-              user &&
-              forgotPassword
-                .mutateAsync({ companyCode: user.companyCode, email: user.email })
-                .catch(() => undefined)
-            }
-          >
-            {forgotPassword.isPending && <Spinner />} Send reset link
-          </button>
-        )}
+        <button
+          className="btn-ghost mt-4"
+          disabled={forgotPassword.isPending || !user}
+          onClick={async () => {
+            if (!user) return
+
+            // Sent from here so the reset screen opens on the code step with one
+            // already in flight — that screen never sends a code of its own.
+            await forgotPassword
+              .mutateAsync({ companyCode: user.companyCode, email: user.email })
+              .catch(() => undefined)
+
+            navigate(
+              `/reset-password?company=${encodeURIComponent(user.companyCode)}` +
+                `&email=${encodeURIComponent(user.email)}`,
+            )
+          }}
+        >
+          {forgotPassword.isPending && <Spinner />} Email me a code
+        </button>
       </Panel>
     </div>
   )

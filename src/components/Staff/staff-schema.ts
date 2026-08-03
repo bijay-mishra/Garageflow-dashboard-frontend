@@ -24,7 +24,13 @@ export interface IStaff {
   id: string
   email: string
   name: string
+  /** What the server authorises this account as. */
   role: UserRole
+  /**
+   * The workshop's own name for that role — "CEO", "Front desk" — from Role
+   * setup, or null when they use the product's own name for it.
+   */
+  companyRoleName: string | null
   phone: string | null
   /** A disabled account keeps its history but cannot sign in. */
   isActive: boolean
@@ -49,6 +55,13 @@ export const staffFormSchema = Yup.object({
     .required('Email is required')
     .max(160, 'Email is too long'),
   role: Yup.string().oneOf(USER_ROLES, 'Choose a role').required('Role is required'),
+
+  // One of the company's own roles, from Role setup. Blank means the product
+  // role above stands on its own. The server treats this as deciding `role`
+  // rather than sitting beside it, so the two cannot end up disagreeing about
+  // what the account may do.
+  companyRoleName: Yup.string().trim().max(40).default(''),
+
   phone: Yup.string().trim().max(40, 'Phone is too long').default(''),
 
   // Required only for a mechanic, because it is the link between the account and
@@ -85,6 +98,7 @@ export const staffInitialValues: StaffFormType = {
   name: '',
   email: '',
   role: 'Mechanic',
+  companyRoleName: 'Mechanic',
   phone: '',
   mechanicName: '',
   customerId: '',
@@ -97,6 +111,9 @@ export const toStaffFormValues = (staff?: IStaff): StaffFormType =>
         name: staff.name,
         email: staff.email,
         role: staff.role,
+        // The dropdown holds a role name, and an account on a plain product
+        // role is in the role of that name.
+        companyRoleName: staff.companyRoleName || staff.role,
         phone: staff.phone ?? '',
         mechanicName: staff.mechanicName ?? '',
         customerId: staff.customerId ?? '',

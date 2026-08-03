@@ -42,6 +42,14 @@ export const authApi = {
     requestBodyType: RequestBodyType.NO_AUTH,
   },
 
+  /** Checks a reset code without spending it, so step two can fail fast. */
+  verifyResetCode: {
+    actionName: 'AUTH_VERIFY_RESET_CODE',
+    controllerName: '/auth/verify-reset-code',
+    requestMethod: RequestMethod.POST,
+    requestBodyType: RequestBodyType.NO_AUTH,
+  },
+
   resetPassword: {
     actionName: 'AUTH_RESET_PASSWORD',
     controllerName: '/auth/reset-password',
@@ -59,5 +67,12 @@ export const authApi = {
     actionName: 'AUTH_CHANGE_PASSWORD',
     controllerName: '/auth/change-password',
     requestMethod: RequestMethod.PUT,
+  },
+
+  /** Replaces a handed-over password on first sign-in. Returns a fresh session. */
+  setPassword: {
+    actionName: 'AUTH_SET_PASSWORD',
+    controllerName: '/auth/set-password',
+    requestMethod: RequestMethod.POST,
   },
 } as const

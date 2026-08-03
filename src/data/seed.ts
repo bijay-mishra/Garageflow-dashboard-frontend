@@ -4,9 +4,8 @@
 // all come from the .NET backend — see the `*-query.ts` file in each feature
 // folder under src/components.
 //
-// Everything here is a candidate for a future `/api/workshop` and
-// `/api/branches` endpoint; until then it is deliberately hardcoded rather than
-// faked through a mock layer.
+// Everything here is a candidate for a future `/api/workshop` endpoint; until
+// then it is deliberately hardcoded rather than faked through a mock layer.
 
 export const workshopInfo = {
   name: 'GarageFlow',
@@ -30,22 +29,13 @@ export const company = {
 }
 
 // ── Branches & fiscal years ──────────────────────────────────────────────────
-// Multi-branch workshops switch between these from the topbar. Fiscal years are
-// Nepali (BS) and run Shrawan → Ashadh, so 2083/84 is the current one.
-
-export interface Branch {
-  id: string
-  name: string
-  address: string
-}
-
-export const branches: Branch[] = [
-  { id: 'BR-001', name: 'Main Branch', address: 'Ring Road, Kalanki' },
-  { id: 'BR-002', name: 'Balaju Service Point', address: 'Balaju Bypass, Kathmandu' },
-  { id: 'BR-003', name: 'Bhaktapur Workshop', address: 'Sallaghari, Bhaktapur' },
-  { id: 'BR-004', name: 'Pokhara Branch', address: 'Lakeside, Pokhara' },
-]
-
-export const fiscalYears = ['2080/81', '2081/82', '2082/83', '2083/84']
-
-export const currentFiscalYear = '2083/84'
+// Both used to live here as hardcoded arrays, and the topbar's two dropdowns
+// read them straight out of the bundle. That meant every install of this product
+// claimed to have a Balaju, Bhaktapur and Pokhara branch, and offered a fixed
+// list of four years that would have gone stale on its own in 2084.
+//
+// Branches are now real records the workshop owns, and fiscal years are computed
+// from the calendar. Both come from `GET /api/workspace`; the selection is a
+// session fact carried in the JWT and changed through `/auth/select-workspace`.
+//
+// See src/components/Workshop/workspace-query.ts.

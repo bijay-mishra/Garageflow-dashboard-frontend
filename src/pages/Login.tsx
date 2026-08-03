@@ -68,8 +68,12 @@ export default function Login() {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
         user: result.user,
+        mustSetPassword: result.mustSetPassword,
       })
-      navigate(redirectTo, { replace: true })
+
+      // A handed-over password gets one screen and nothing else. No "back where
+      // I was" applies — this is a first sign-in, so there is nowhere to return.
+      navigate(result.mustSetPassword ? '/set-password' : redirectTo, { replace: true })
     } catch (err) {
       // The API's own wording — "Company code, email or password is incorrect."
       setError(err instanceof Error ? err.message : t('login.required'))

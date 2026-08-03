@@ -7,8 +7,10 @@ import type {
   ForgotPasswordFormType,
   IAuthResult,
   IAuthUser,
+  IPasswordResetStarted,
   LoginFormType,
   ProfileFormType,
+  SetPasswordFormType,
 } from './auth-schema'
 
 // ── Auth queries ─────────────────────────────────────────────────────────────
@@ -22,6 +24,20 @@ export const useLogin = () =>
     mutationFn: (requestData: LoginFormType) =>
       initApiRequest<IAuthResult>({ apiDetails: authApi.login, requestData }),
     // The caller stores the session and navigates; see AuthContext.login.
+  })
+
+/**
+ * Replaces the password an account was handed, on first sign-in.
+ *
+ * Returns a fresh session, which the caller stores — the old tokens are revoked
+ * server-side, so keeping them would leave the tab holding a dead refresh token
+ * and an access token that still says "must set password".
+ */
+export const useSetPassword = () =>
+  useMutation({
+    mutationKey: [authApi.setPassword.actionName],
+    mutationFn: (requestData: { newPassword: SetPasswordFormType['newPassword'] }) =>
+      initApiRequest<IAuthResult>({ apiDetails: authApi.setPassword, requestData }),
   })
 
 /**
@@ -60,18 +76,43 @@ export const useGetCurrentUser = (enabled = true) =>
     select: (res) => res?.data?.data ?? null,
   })
 
+/**
+ * Asks for a six-digit code by email.
+ *
+ * Succeeds whether or not the account exists — the API refuses to say, so that
+ * this form cannot be used to find out which addresses have accounts. There is
+ * nothing to branch on and the screen moves to the code step either way.
+ */
 export const useForgotPassword = () =>
   useMutation({
     mutationKey: [authApi.forgotPassword.actionName],
     mutationFn: (requestData: ForgotPasswordFormType) =>
-      initApiRequest<null>({ apiDetails: authApi.forgotPassword, requestData }),
+      initApiRequest<IPasswordResetStarted>({ apiDetails: authApi.forgotPassword, requestData }),
+  })
+
+/**
+ * Checks the code before asking for a new password.
+ *
+ * Spends nothing, so a good code still works at the next step. Its whole point
+ * is that a mistyped digit is caught here rather than after somebody has chosen
+ * and confirmed a password they then have to type again.
+ */
+export const useVerifyResetCode = () =>
+  useMutation({
+    mutationKey: [authApi.verifyResetCode.actionName],
+    mutationFn: (requestData: { companyCode: string; email: string; code: string }) =>
+      initApiRequest<null>({ apiDetails: authApi.verifyResetCode, requestData }),
   })
 
 export const useResetPassword = () =>
   useMutation({
     mutationKey: [authApi.resetPassword.actionName],
-    mutationFn: (requestData: { token: string; newPassword: string }) =>
-      initApiRequest<null>({ apiDetails: authApi.resetPassword, requestData }),
+    mutationFn: (requestData: {
+      companyCode: string
+      email: string
+      code: string
+      newPassword: string
+    }) => initApiRequest<null>({ apiDetails: authApi.resetPassword, requestData }),
   })
 
 /** Saves the signed-in user's own name, email and phone. */

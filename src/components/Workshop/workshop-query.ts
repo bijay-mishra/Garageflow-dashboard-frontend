@@ -35,6 +35,43 @@ export interface IWorkshop {
   longitude: number | null
   openingHours: string
   invoiceFooter: string
+
+  // ── Directory listing ──────────────────────────────────────────────────────
+  // Whether this workshop appears to customers browsing the app for a garage.
+  // Off by default: a shop that bought this to run its own books has not agreed
+  // to be advertised, and publishing its name and address without asking would
+  // be a decision made on its behalf.
+
+  /** A sentence or two shown on the garage's card in the app. */
+  about: string
+  isListed: boolean
+
+  // ── Home delivery ──────────────────────────────────────────────────────────
+
+  // ── Bank transfer ──────────────────────────────────────────────────────
+  // Shown to a customer paying by transfer. Not a gateway: the app displays
+  // these, the customer moves the money, and staff confirm it.
+  bankName: string
+  bankAccountName: string
+  bankAccountNumber: string
+  bankBranch: string
+  /** True once there is enough on file to actually pay into. */
+  canBankTransfer: boolean
+
+  /**
+   * True when delivery can actually be quoted — the switch is on *and* the
+   * workshop has a pin. Computed by the server, because a distance-based fee
+   * with nothing to measure from is not a price.
+   */
+  canDeliver: boolean
+  deliveryEnabled: boolean
+  deliveryBaseFee: number
+  deliveryPerKm: number
+  /** Bills at or above this get delivery free. Zero switches that off. */
+  deliveryFreeAbove: number
+  /** Beyond this many km the app stops offering delivery at all. */
+  deliveryMaxKm: number
+
   /**
    * Gateways with working credentials on the server right now. Computed, not
    * stored — a workshop with no Khalti key never sees a Khalti button.
@@ -42,7 +79,13 @@ export interface IWorkshop {
   onlineProviders: string[]
 }
 
-export type WorkshopFormType = Omit<IWorkshop, 'onlineProviders'> & { clearLocation?: boolean }
+/** `canDeliver` is derived, so it is read-only and never sent back. */
+export type WorkshopFormType = Omit<
+  IWorkshop,
+  'onlineProviders' | 'canDeliver' | 'canBankTransfer'
+> & {
+  clearLocation?: boolean
+}
 
 /**
  * The workshop record.

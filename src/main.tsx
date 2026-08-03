@@ -10,7 +10,8 @@ import { LanguageProvider } from '@/context/LanguageContext'
 import { ToastProvider } from '@/context/ToastContext'
 import { ConfirmProvider } from '@/context/ConfirmContext'
 import { AuthProvider } from '@/context/AuthContext'
-import { PlanProvider } from '@/context/PlanContext'
+import { ModuleProvider } from '@/context/ModuleContext'
+import { MenuProvider } from '@/context/MenuContext'
 import { WorkspaceProvider } from '@/context/WorkspaceContext'
 import { loadRuntimeConfig } from '@/lib/runtimeConfig'
 import './index.css'
@@ -27,13 +28,15 @@ loadRuntimeConfig().finally(() => {
             <ToastProvider>
               <ConfirmProvider>
                 <AuthProvider>
-                  <PlanProvider>
+                  <ModuleProvider>
+                    <MenuProvider>
                     <WorkspaceProvider>
                       <BrowserRouter>
                         <App />
                       </BrowserRouter>
                     </WorkspaceProvider>
-                  </PlanProvider>
+                    </MenuProvider>
+                  </ModuleProvider>
                 </AuthProvider>
               </ConfirmProvider>
             </ToastProvider>

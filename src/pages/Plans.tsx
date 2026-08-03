@@ -3,13 +3,16 @@ import { CheckIcon, MinusIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import StickyHeader from '@/components/common/headers/StickyHeader'
 import { useToast } from '@/context/ToastContext'
-import { usePlan, type PlanId } from '@/context/PlanContext'
+import { useModules, MODULE_LABELS, type ModuleName } from '@/context/ModuleContext'
 import { formatRs } from '@/lib/format'
 
 type Billing = 'monthly' | 'yearly'
+type PlanId = 'starter' | 'pro' | 'business'
 
 interface Plan {
   id: PlanId
+  /** What this tier grants. Used to work out which one the workshop is on. */
+  modules: ModuleName[]
   name: string
   blurb: string
   /** Monthly price in Rs. Yearly bills ten months — two are free. */
@@ -25,6 +28,7 @@ const PLANS: Plan[] = [
     name: 'Starter',
     blurb: 'For a single bay getting off paper.',
     monthly: 0,
+    modules: ['services', 'billing', 'reports', 'serviceHistory', 'staff'],
     features: [
       'Up to 100 job cards a month',
       'Customers & vehicle records',
@@ -40,6 +44,16 @@ const PLANS: Plan[] = [
     blurb: 'For a busy workshop with a full team.',
     monthly: 2499,
     popular: true,
+    modules: [
+      'services',
+      'billing',
+      'reports',
+      'serviceHistory',
+      'staff',
+      'fiscalYear',
+      'onlineBooking',
+      'onlinePayment',
+    ],
     features: [
       'Unlimited job cards',
       'SMS service reminders',
@@ -56,6 +70,18 @@ const PLANS: Plan[] = [
     name: 'Business',
     blurb: 'For several branches under one roof.',
     monthly: 5999,
+    modules: [
+      'services',
+      'billing',
+      'reports',
+      'serviceHistory',
+      'staff',
+      'fiscalYear',
+      'onlineBooking',
+      'onlinePayment',
+      'deliveries',
+      'multiBranch',
+    ],
     features: [
       'Everything in Pro',
       'Multi-branch switching with shared customers',
@@ -69,17 +95,27 @@ const PLANS: Plan[] = [
 
 export default function Plans() {
   const toast = useToast()
-  const { plan: currentPlan, setPlan } = usePlan()
+  const { modules } = useModules()
   const [billing, setBilling] = useState<Billing>('monthly')
 
   const priceOf = (plan: Plan) => (billing === 'monthly' ? plan.monthly : plan.monthly * 10)
 
-  // No billing backend yet, so switching plans just moves the local feature
-  // gate — enough to try the premium features out.
+  // Worked out from what the workshop actually has rather than stored: the
+  // modules are the truth, and a separate "plan" field would be a second copy
+  // of it that could disagree. The cheapest tier that covers everything granted
+  // is the one they are on.
+  const granted = new Set(modules)
+
+  const currentPlan =
+    PLANS.find((p) => modules.every((m) => p.modules.includes(m)))?.id ?? 'business'
+
+  // Upgrading is a conversation, not a button. This page used to write a plan
+  // id to localStorage, which unlocked multi-branch for free and would have
+  // gone on doing so in production. Only an operator can grant a module now,
+  // so the honest thing for this button to do is say who to ask.
   const choose = (plan: Plan) => {
     if (plan.id === currentPlan) return
-    setPlan(plan.id)
-    toast.success(`Switched to ${plan.name}. Billing is not connected yet.`)
+    toast.info(`Contact GarageFlow support to move to ${plan.name}.`)
   }
 
   return (
@@ -164,6 +200,34 @@ export default function Plans() {
           )
         })}
       </div>
+
+      {/* What is actually switched on, straight from the server. The tiers above
+          are what is for sale; this is what this workshop has, and the two can
+          differ — an operator can grant a single module without a plan change. */}
+      <section className="card p-5">
+        <h3 className="text-sm font-bold text-ink-900">Enabled for your workshop</h3>
+        <p className="mt-0.5 text-xs text-ink-400">
+          Customers, vehicles and job cards are always included.
+        </p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(Object.keys(MODULE_LABELS) as ModuleName[]).map((m) => {
+            const on = granted.has(m)
+            return (
+              <span
+                key={m}
+                className={clsx(
+                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold',
+                  on ? 'bg-emerald-50 text-emerald-700' : 'bg-ink-50 text-ink-400',
+                )}
+              >
+                {on ? <CheckIcon className="h-3.5 w-3.5" /> : <MinusIcon className="h-3.5 w-3.5" />}
+                {MODULE_LABELS[m]}
+              </span>
+            )
+          })}
+        </div>
+      </section>
 
       <section className="card p-5">
         <h3 className="text-sm font-bold text-ink-900">Billing questions</h3>

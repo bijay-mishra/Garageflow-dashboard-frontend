@@ -10,7 +10,8 @@ export interface IAuthUser {
   id: string
   email: string
   name: string
-  role: 'Owner' | 'Manager' | 'Advisor'
+  /** SuperAdmin belongs to no company and only reaches the operator console. */
+  role: 'SuperAdmin' | 'Owner' | 'Manager' | 'Advisor'
   workshop: string
   companyCode: string
   phone?: string
@@ -24,7 +25,26 @@ export interface IAuthResult {
   refreshToken: string
   refreshTokenExpiresAt: string
   user: IAuthUser
+  /**
+   * True while the password is one somebody else chose — an operator setting up
+   * the company, an owner adding staff. The token reaches only
+   * `/auth/set-password` until it is replaced, so this is a routing signal
+   * rather than the control itself.
+   */
+  mustSetPassword?: boolean
 }
+
+export const setPasswordFormSchema = Yup.object({
+  newPassword: Yup.string().required('Choose a password').min(8, 'Use at least 8 characters'),
+  // Confirmation, because there is no safety net worth relying on here: the
+  // account was created minutes ago and the temporary password stops working
+  // the instant this succeeds.
+  confirmPassword: Yup.string()
+    .required('Type it again')
+    .oneOf([Yup.ref('newPassword')], 'Both passwords must match'),
+})
+
+export type SetPasswordFormType = Yup.InferType<typeof setPasswordFormSchema>
 
 // ── Sign in ──────────────────────────────────────────────────────────────────
 
@@ -61,6 +81,24 @@ export const forgotPasswordInitialValues: ForgotPasswordFormType = {
   companyCode: 'DEMO',
   email: '',
 }
+
+/** What `/auth/forgot-password` answers — the same either way, by design. */
+export interface IPasswordResetStarted {
+  /** Masked from what was typed, e.g. `ra••••@gmail.com`. */
+  sentTo: string
+  expiresInMinutes: number
+}
+
+// ── The emailed code ─────────────────────────────────────────────────────────
+
+export const resetCodeSchema = Yup.object({
+  code: Yup.string()
+    .trim()
+    .required('Enter the code from your email')
+    .matches(/^\d{6}$/, 'The code is six digits'),
+})
+
+export type ResetCodeFormType = Yup.InferType<typeof resetCodeSchema>
 
 // ── Reset password ───────────────────────────────────────────────────────────
 
