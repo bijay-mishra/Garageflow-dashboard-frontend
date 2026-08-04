@@ -134,7 +134,7 @@ export default function WorkshopSettings() {
             name="legalName"
             label="Registered name"
             formik={formik}
-            placeholder="Valley Auto Care Pvt. Ltd."
+            placeholder="GarageFlow Auto Care Pvt. Ltd."
           />
           <Input name="taxNumber" label="PAN" formik={formik} placeholder="601234567" />
 
@@ -449,7 +449,7 @@ function BankTransfer({ formik }: { formik: FormikProps<WorkshopFormType> }) {
         name="bankAccountName"
         label="Account name"
         formik={formik}
-        placeholder="Valley Auto Care Pvt. Ltd."
+        placeholder="GarageFlow Auto Care Pvt. Ltd."
       />
       <Input
         name="bankAccountNumber"

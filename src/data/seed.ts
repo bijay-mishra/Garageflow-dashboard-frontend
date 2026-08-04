@@ -10,7 +10,7 @@
 export const workshopInfo = {
   name: 'GarageFlow',
   tagline: 'Auto Workshop Suite',
-  legalName: 'Valley Auto Care Pvt. Ltd.',
+  legalName: 'GarageFlow Auto Care Pvt. Ltd.',
   address: 'Ring Road, Kalanki, Kathmandu',
   phone: '+977 1-5234567',
   pan: '601234567',
