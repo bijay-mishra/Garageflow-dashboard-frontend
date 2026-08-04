@@ -1,8 +1,14 @@
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Input from '@/components/common/form/Input'
+import LogoPicker from '@/components/common/form/LogoPicker'
 import { Spinner } from '@/components/common/loaders/States'
-import { useUpdateCompany, type ICompany } from './superadmin-query'
+import {
+  useDeleteCompanyLogo,
+  useUpdateCompany,
+  useUploadCompanyLogo,
+  type ICompany,
+} from './superadmin-query'
 
 const schema = Yup.object({
   name: Yup.string().trim().required('A name is required').max(160),
@@ -32,6 +38,8 @@ export default function CompanyEditForm({
   onClose: () => void
 }) {
   const updateCompany = useUpdateCompany()
+  const uploadLogo = useUploadCompanyLogo()
+  const deleteLogo = useDeleteCompanyLogo()
 
   const formik = useFormik({
     initialValues: {
@@ -79,6 +87,21 @@ export default function CompanyEditForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input name="phone" label="Phone" formik={formik} />
           <Input name="email" label="Email" type="email" formik={formik} />
+        </div>
+
+        <div>
+          <span className="mb-1.5 block text-xs font-semibold text-ink-600">Logo</span>
+          {/* Saved on pick rather than on Save changes, and the text below says
+              so. Uploading a file and editing text are different requests, and
+              pretending otherwise means one failing takes the other with it. */}
+          <LogoPicker
+            url={company.logoUrl}
+            name={formik.values.name || company.name}
+            onPick={(file) => uploadLogo.mutate({ code: company.companyCode, file })}
+            onRemove={() => deleteLogo.mutate({ code: company.companyCode })}
+            busy={uploadLogo.isPending || deleteLogo.isPending}
+            hint="Saved straight away, separately from the fields above. Under 1 MB."
+          />
         </div>
 
         <p className="text-xs text-ink-400">

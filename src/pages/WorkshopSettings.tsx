@@ -8,9 +8,12 @@ import Toggle from '@/components/common/form/Toggle'
 import Badge from '@/components/common/Badge'
 import { formatRs } from '@/lib/format'
 import { ErrorBlock, LoadingBlock, Spinner } from '@/components/common/loaders/States'
+import LogoPicker from '@/components/common/form/LogoPicker'
 import {
+  useDeleteLogo,
   useGetWorkshop,
   useUpdateWorkshop,
+  useUploadLogo,
   type WorkshopFormType,
 } from '@/components/Workshop/workshop-query'
 
@@ -53,6 +56,8 @@ const schema = Yup.object({
 export default function WorkshopSettings() {
   const { data: workshop, isLoading, isError } = useGetWorkshop()
   const updateWorkshop = useUpdateWorkshop()
+  const uploadLogo = useUploadLogo()
+  const deleteLogo = useDeleteLogo()
 
   const formik = useFormik<WorkshopFormType>({
     initialValues: {
@@ -132,6 +137,25 @@ export default function WorkshopSettings() {
             placeholder="Valley Auto Care Pvt. Ltd."
           />
           <Input name="taxNumber" label="PAN" formik={formik} placeholder="601234567" />
+
+          <div>
+            <span className="mb-1.5 block text-xs font-semibold text-ink-600">Logo</span>
+            <LogoPicker
+              url={workshop?.logoUrl}
+              name={formik.values.name || workshop?.name || 'Your workshop'}
+              onPick={(file) => uploadLogo.mutate(file)}
+              onRemove={() => deleteLogo.mutate()}
+              busy={uploadLogo.isPending || deleteLogo.isPending}
+              hint="Printed at the top of every invoice you issue. PNG, JPG, WebP or SVG, under 1 MB."
+            />
+            {/* Saved on pick, not on Save changes. Two save buttons on one
+                screen doing different things is a trap, and the alternative —
+                holding a file in form state until submit — means a failed
+                upload silently loses the rest of the form too. */}
+            <p className="mt-1 text-xs text-ink-400">
+              Saved as soon as you choose it, separately from the fields above.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input name="phone" label="Phone" type="tel" formik={formik} placeholder="+977 1-5234567" />

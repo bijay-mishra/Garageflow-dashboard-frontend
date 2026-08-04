@@ -302,18 +302,24 @@ function ConsoleTopbar({ onMenu }: { onMenu: () => void }) {
 export function ConsoleHeader({
   title,
   subtitle,
+  /** Sits left of the title. A company's page passes its logo. */
+  icon,
   children,
 }: {
   title: string
   subtitle?: string
+  icon?: React.ReactNode
   children?: React.ReactNode
 }) {
   return (
     <header className="border-b border-ink-200 bg-white">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-5 lg:px-8">
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold text-ink-900">{title}</h1>
-          {subtitle && <p className="mt-0.5 truncate text-sm text-ink-500">{subtitle}</p>}
+        <div className="flex min-w-0 items-center gap-3">
+          {icon}
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold text-ink-900">{title}</h1>
+            {subtitle && <p className="mt-0.5 truncate text-sm text-ink-500">{subtitle}</p>}
+          </div>
         </div>
 
         {children && <div className="flex items-center gap-2">{children}</div>}

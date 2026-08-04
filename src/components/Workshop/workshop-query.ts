@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
-import { RequestMethod } from '@/lib/api-types'
+import { RequestBodyType, RequestMethod } from '@/lib/api-types'
 import { useToast } from '@/context/ToastContext'
 
 // ── Workshop ─────────────────────────────────────────────────────────────────
@@ -19,6 +19,22 @@ export const workshopApi = {
     controllerName: '/workshop',
     requestMethod: RequestMethod.PUT,
   },
+
+  // Its own endpoint rather than a field on the PUT above: a file needs a
+  // multipart body, and folding it in would mean re-uploading the image every
+  // time somebody corrected a phone number.
+  uploadLogo: {
+    actionName: 'UPLOAD_WORKSHOP_LOGO',
+    controllerName: '/workshop/logo',
+    requestMethod: RequestMethod.POST,
+    requestBodyType: RequestBodyType.FORM_DATA,
+  },
+
+  deleteLogo: {
+    actionName: 'DELETE_WORKSHOP_LOGO',
+    controllerName: '/workshop/logo',
+    requestMethod: RequestMethod.DELETE,
+  },
 } as const
 
 /** The workshop as `GET /api/workshop` returns it. */
@@ -31,6 +47,17 @@ export interface IWorkshop {
   email: string
   /** PAN, printed on every bill. */
   taxNumber: string
+
+  /**
+   * Absolute URL of the workshop's logo, or null if it has not set one.
+   *
+   * Null rather than a placeholder, because what to show instead differs by
+   * surface: the sidebar falls back to the product mark, the printed invoice to
+   * nothing at all — a bill is better with a bare name than with somebody else's
+   * gear icon on it.
+   */
+  logoUrl: string | null
+
   latitude: number | null
   longitude: number | null
   openingHours: string
@@ -79,10 +106,15 @@ export interface IWorkshop {
   onlineProviders: string[]
 }
 
-/** `canDeliver` is derived, so it is read-only and never sent back. */
+/**
+ * `canDeliver` is derived, so it is read-only and never sent back. `logoUrl` is
+ * left out for a different reason: it is set by uploading a file, not by typing
+ * into this form, and including it would let a save quietly send the URL back as
+ * if it were an editable field.
+ */
 export type WorkshopFormType = Omit<
   IWorkshop,
-  'onlineProviders' | 'canDeliver' | 'canBankTransfer'
+  'onlineProviders' | 'canDeliver' | 'canBankTransfer' | 'logoUrl'
 > & {
   clearLocation?: boolean
 }
@@ -117,5 +149,43 @@ export const useUpdateWorkshop = () => {
       toast.success(res?.data?.message ?? 'Workshop details saved')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not save workshop details'),
+  })
+}
+
+/**
+ * Replaces the workshop's logo.
+ *
+ * Invalidated rather than written into the cache from the response: the same
+ * record is read by the sidebar and by the printed bill, and those must not be
+ * able to disagree about which mark is current.
+ */
+export const useUploadLogo = () => {
+  const queryClient = useQueryClient()
+  const toast = useToast()
+
+  return useMutation({
+    mutationKey: [workshopApi.uploadLogo.actionName],
+    mutationFn: (file: File) =>
+      initApiRequest<IWorkshop>({ apiDetails: workshopApi.uploadLogo, requestData: { file } }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: [workshopApi.getWorkshop.actionName] })
+      toast.success(res?.data?.message ?? 'Logo updated')
+    },
+    onError: (error: Error) => toast.error(error.message || 'Could not upload the logo'),
+  })
+}
+
+export const useDeleteLogo = () => {
+  const queryClient = useQueryClient()
+  const toast = useToast()
+
+  return useMutation({
+    mutationKey: [workshopApi.deleteLogo.actionName],
+    mutationFn: () => initApiRequest<IWorkshop>({ apiDetails: workshopApi.deleteLogo }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: [workshopApi.getWorkshop.actionName] })
+      toast.success(res?.data?.message ?? 'Logo removed')
+    },
+    onError: (error: Error) => toast.error(error.message || 'Could not remove the logo'),
   })
 }

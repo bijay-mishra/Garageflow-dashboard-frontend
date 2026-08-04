@@ -7,6 +7,32 @@ import { useGetWorkshop } from '@/components/Workshop/workshop-query'
 import { ErrorBlock, Spinner } from '@/components/common/loaders/States'
 
 /**
+ * Settles once every image on the page has loaded, or given up trying.
+ *
+ * Resolves on failure as readily as on success: a logo that 404s must not hold
+ * the print dialog hostage, and a bill without its mark still has to reach the
+ * customer. Capped so a hung request cannot block it either.
+ */
+async function imagesReady(timeoutMs = 3000) {
+  const pending = Array.from(document.images)
+    .filter((image) => !image.complete)
+    .map(
+      (image) =>
+        new Promise<void>((resolve) => {
+          image.addEventListener('load', () => resolve(), { once: true })
+          image.addEventListener('error', () => resolve(), { once: true })
+        }),
+    )
+
+  if (pending.length === 0) return
+
+  await Promise.race([
+    Promise.all(pending),
+    new Promise((resolve) => window.setTimeout(resolve, timeoutMs)),
+  ])
+}
+
+/**
  * The printable bill, on its own route.
  *
  * A route rather than a modal so it can be opened in a new tab: printing from a
@@ -41,10 +67,24 @@ export default function InvoicePrint() {
 
     printed.current = true
 
+    let cancelled = false
+
     // One frame, so the browser has laid the document out before it is
     // snapshotted. Printing synchronously here can capture a half-styled page.
-    const timer = window.setTimeout(() => window.print(), 150)
-    return () => window.clearTimeout(timer)
+    const timer = window.setTimeout(async () => {
+      // …and the letterhead logo has actually decoded. The workshop query
+      // resolving only means the *URL* arrived; the image is a second request,
+      // and on a cold cache it loses a 150ms race — which prints a bill with a
+      // blank space where the mark should be, silently, once.
+      await imagesReady()
+
+      if (!cancelled) window.print()
+    }, 150)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [doc, loadingWorkshop, params])
 
   if (isLoading) {

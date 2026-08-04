@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
-import { RequestMethod } from '@/lib/api-types'
+import { RequestBodyType, RequestMethod } from '@/lib/api-types'
 import {
   beginImpersonation,
   getAccessToken,
@@ -47,6 +47,17 @@ export const superAdminApi = {
     controllerName: '/superadmin/menus/{key}',
     requestMethod: RequestMethod.PUT,
   },
+  uploadCompanyLogo: {
+    actionName: 'SA_UPLOAD_COMPANY_LOGO',
+    controllerName: '/superadmin/companies/{code}/logo',
+    requestMethod: RequestMethod.POST,
+    requestBodyType: RequestBodyType.FORM_DATA,
+  },
+  deleteCompanyLogo: {
+    actionName: 'SA_DELETE_COMPANY_LOGO',
+    controllerName: '/superadmin/companies/{code}/logo',
+    requestMethod: RequestMethod.DELETE,
+  },
   deleteCompany: {
     actionName: 'SA_DELETE_COMPANY',
     controllerName: '/superadmin/companies/{code}',
@@ -71,6 +82,8 @@ export interface ICompany {
   phone: string
   email: string
   address: string
+  /** Absolute URL of their logo, or null if they have not got one. */
+  logoUrl: string | null
   /** False means nobody there can sign in. Their data is untouched. */
   isActive: boolean
   isListed: boolean
@@ -250,6 +263,53 @@ export const useUpdateCompany = () => {
       toast.success(res?.data?.message ?? 'Company updated')
     },
     onError: (error: Error) => toast.error(error.message || 'Could not update the company'),
+  })
+}
+
+/**
+ * Sets a company's logo on its behalf.
+ *
+ * The operator sets a company up before anyone at that workshop has ever signed
+ * in, and the logo usually arrives in the same email as the name and the PAN.
+ * Without this the first invoices go out bare, waiting on an owner who does not
+ * yet know the setting exists.
+ */
+export const useUploadCompanyLogo = () => {
+  const invalidate = useInvalidateCompanies()
+  const toast = useToast()
+
+  return useMutation({
+    mutationKey: [superAdminApi.uploadCompanyLogo.actionName],
+    mutationFn: ({ code, file }: { code: string; file: File }) =>
+      initApiRequest<ICompany>({
+        apiDetails: superAdminApi.uploadCompanyLogo,
+        pathVariables: { code },
+        requestData: { file },
+      }),
+    onSuccess: (res) => {
+      invalidate()
+      toast.success(res?.data?.message ?? 'Logo set')
+    },
+    onError: (error: Error) => toast.error(error.message || 'Could not upload the logo'),
+  })
+}
+
+export const useDeleteCompanyLogo = () => {
+  const invalidate = useInvalidateCompanies()
+  const toast = useToast()
+
+  return useMutation({
+    mutationKey: [superAdminApi.deleteCompanyLogo.actionName],
+    mutationFn: ({ code }: { code: string }) =>
+      initApiRequest<ICompany>({
+        apiDetails: superAdminApi.deleteCompanyLogo,
+        pathVariables: { code },
+      }),
+    onSuccess: (res) => {
+      invalidate()
+      toast.success(res?.data?.message ?? 'Logo removed')
+    },
+    onError: (error: Error) => toast.error(error.message || 'Could not remove the logo'),
   })
 }
 

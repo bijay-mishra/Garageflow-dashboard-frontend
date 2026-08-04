@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Input from '@/components/common/form/Input'
+import LogoPicker from '@/components/common/form/LogoPicker'
 import { Spinner } from '@/components/common/loaders/States'
-import { useCreateCompany, type ICompanyCreated } from './superadmin-query'
+import { useCreateCompany, useUploadCompanyLogo, type ICompanyCreated } from './superadmin-query'
 import CompanyHandover from './CompanyHandover'
 
 const schema = Yup.object({
@@ -46,9 +47,14 @@ interface CompanyFormProps {
  */
 export default function CompanyForm({ modules, onClose }: CompanyFormProps) {
   const createCompany = useCreateCompany()
+  const uploadLogo = useUploadCompanyLogo()
 
   // Set once the company exists. Swaps the form for the credentials to read out.
   const [handover, setHandover] = useState<ICompanyCreated | null>(null)
+
+  // Chosen before the company exists, so it cannot be uploaded yet — it goes up
+  // in the same breath as the create, once there is a company code to put it on.
+  const [logo, setLogo] = useState<File | null>(null)
 
   const formik = useFormik({
     initialValues: {
@@ -71,11 +77,33 @@ export default function CompanyForm({ modules, onClose }: CompanyFormProps) {
         const res = await createCompany.mutateAsync(values)
         const created = res?.data?.data
 
+        if (!created) {
+          onClose()
+          return
+        }
+
+        // After the company, and swallowed on failure. A logo that would not
+        // upload must not cost the operator the one-time password below, which
+        // exists in this response and nowhere else — the company is created
+        // either way, and its logo can be set again from its own page.
+        if (logo) {
+          try {
+            const withLogo = await uploadLogo.mutateAsync({
+              code: created.company.companyCode,
+              file: logo,
+            })
+
+            const saved = withLogo?.data?.data
+            if (saved) created.company = saved
+          } catch {
+            /* reported by the mutation's onError; the company still stands */
+          }
+        }
+
         // Not closed on success. The password is in this response and nowhere
         // else, ever — closing the form would lose the one thing the operator
         // came here to collect.
-        if (created) setHandover(created)
-        else onClose()
+        setHandover(created)
       } catch {
         /* handled by the mutation's onError */
       }
@@ -89,6 +117,10 @@ export default function CompanyForm({ modules, onClose }: CompanyFormProps) {
 
     formik.setFieldValue('enabledModules', next)
   }
+
+  // One flag for both requests: to the operator this is a single "create", and
+  // the buttons must stay disabled while the logo is still going up.
+  const busy = createCompany.isPending || uploadLogo.isPending
 
   if (handover) return <CompanyHandover created={handover} onClose={onClose} />
 
@@ -130,6 +162,22 @@ export default function CompanyForm({ modules, onClose }: CompanyFormProps) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input name="address" label="Address" formik={formik} placeholder="Main Road, Biratnagar" />
             <Input name="phone" label="Phone" formik={formik} placeholder="+977 21-555111" />
+          </div>
+
+          <div>
+            <span className="mb-1.5 block text-xs font-semibold text-ink-600">
+              Logo <span className="font-normal text-ink-400">— optional</span>
+            </span>
+            {/* Held, not posted. There is no company to attach a file to until
+                the form below succeeds, so the File waits in state and goes up
+                immediately afterwards. */}
+            <LogoPicker
+              url={null}
+              name={formik.values.name || 'New company'}
+              file={logo}
+              onPick={setLogo}
+              hint="Printed at the top of the invoices they issue. They can change it themselves later."
+            />
           </div>
         </section>
 
@@ -200,11 +248,11 @@ export default function CompanyForm({ modules, onClose }: CompanyFormProps) {
         </section>
 
         <div className="flex justify-end gap-2 border-t border-ink-100 pt-5">
-          <button type="button" className="btn-ghost" onClick={onClose} disabled={createCompany.isPending}>
+          <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
             Cancel
           </button>
-          <button type="submit" className="btn-primary" disabled={createCompany.isPending}>
-            {createCompany.isPending && <Spinner />} Create company
+          <button type="submit" className="btn-primary" disabled={busy}>
+            {busy && <Spinner />} Create company
           </button>
         </div>
       </form>

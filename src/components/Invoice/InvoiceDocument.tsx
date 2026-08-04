@@ -43,18 +43,35 @@ export default function InvoiceDocument({ doc, workshop }: InvoiceDocumentProps)
     phone: workshop?.phone || workshopInfo.phone,
     pan: workshop?.taxNumber || workshopInfo.pan,
     footer: workshop?.invoiceFooter ?? '',
+    // No fallback mark. A bill is better with a bare name than with the
+    // product's gear icon on it — that would put GarageFlow's branding on a
+    // tax document issued by somebody else.
+    logo: workshop?.logoUrl ?? null,
   }
 
   return (
     <article className="invoice-doc mx-auto bg-white text-black">
       {/* ── Letterhead ───────────────────────────────────────────────────── */}
       <header className="flex items-start justify-between gap-8 border-b-2 border-black pb-4">
-        <div>
-          <h1 className="text-[15pt] font-bold uppercase tracking-wide">{shop.legalName}</h1>
-          <p className="mt-1 text-[9pt] leading-snug">{shop.address}</p>
-          <p className="text-[9pt] leading-snug">
-            Tel {shop.phone} · PAN {shop.pan}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          {/* Sized in millimetres like the rest of the document, and capped in
+              height so a wide wordmark and a square badge both sit on the same
+              baseline as the name. `object-contain` never crops the artwork. */}
+          {shop.logo && (
+            <img
+              src={shop.logo}
+              alt=""
+              className="mt-0.5 h-[16mm] w-[16mm] shrink-0 object-contain"
+            />
+          )}
+
+          <div className="min-w-0">
+            <h1 className="text-[15pt] font-bold uppercase tracking-wide">{shop.legalName}</h1>
+            <p className="mt-1 text-[9pt] leading-snug">{shop.address}</p>
+            <p className="text-[9pt] leading-snug">
+              Tel {shop.phone} · PAN {shop.pan}
+            </p>
+          </div>
         </div>
 
         <div className="shrink-0 text-right">

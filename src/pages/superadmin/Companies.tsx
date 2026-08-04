@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BuildingOffice2Icon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import Badge from '@/components/common/Badge'
+import CompanyLogo from '@/components/common/CompanyLogo'
 import { ErrorBlock, LoadingBlock } from '@/components/common/loaders/States'
 import { ConsoleHeader } from '@/components/SuperAdmin/SuperAdminLayout'
 import CompanyForm from '@/components/SuperAdmin/CompanyForm'
@@ -92,15 +93,23 @@ export default function Companies() {
                 {visible.map((company) => (
                   <tr key={company.companyCode} className="hover:bg-ink-50">
                     <td className="px-4 py-3">
-                      <Link
-                        to={`/superadmin/companies/${company.companyCode}`}
-                        className="font-semibold text-ink-900 hover:text-brand-600"
-                      >
-                        {company.name}
-                      </Link>
-                      <code className="ml-2 rounded bg-ink-100 px-1.5 py-0.5 text-[11px] font-semibold text-ink-500">
-                        {company.companyCode}
-                      </code>
+                      {/* The mark leads the row. This is the one screen that
+                          shows every company at once, and a page of codes is
+                          faster to scan by logo than by word. */}
+                      <span className="flex items-center gap-2.5">
+                        <CompanyLogo url={company.logoUrl} name={company.name} size="sm" />
+                        <span className="min-w-0">
+                          <Link
+                            to={`/superadmin/companies/${company.companyCode}`}
+                            className="font-semibold text-ink-900 hover:text-brand-600"
+                          >
+                            {company.name}
+                          </Link>
+                          <code className="ml-2 rounded bg-ink-100 px-1.5 py-0.5 text-[11px] font-semibold text-ink-500">
+                            {company.companyCode}
+                          </code>
+                        </span>
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-ink-600">{company.userCount}</td>
                     <td className="px-4 py-3 text-ink-600">{company.customerCount}</td>

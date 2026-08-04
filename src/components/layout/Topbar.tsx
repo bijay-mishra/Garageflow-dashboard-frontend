@@ -23,7 +23,7 @@ import { useLogout } from '@/components/Auth/auth-query'
 import { getRefreshToken } from '@/lib/authStorage'
 import { useLang } from '@/context/LanguageContext'
 import { useWorkspace } from '@/context/WorkspaceContext'
-import { company } from '@/data/seed'
+import { useGetWorkshop } from '@/components/Workshop/workshop-query'
 import { LANGS } from '@/lib/i18n'
 
 interface TopbarProps {
@@ -42,6 +42,11 @@ export default function Topbar({ collapsed, onMenu, onToggleCollapse }: TopbarPr
   const logoutMutation = useLogout()
   const { lang, setLang, t } = useLang()
   const { branch } = useWorkspace()
+
+  // Shared with the sidebar and the printed invoice — one cached query, not
+  // three requests. See the staleTime on useGetWorkshop.
+  const { data: workshop } = useGetWorkshop()
+
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
@@ -85,7 +90,17 @@ export default function Topbar({ collapsed, onMenu, onToggleCollapse }: TopbarPr
 
         {/* Tenant company + active branch */}
         <div className="hidden min-w-0 shrink-0 leading-tight sm:block">
-          <p className="truncate text-sm font-bold text-white">{company.name}</p>
+          {/* The workshop's own name, from GET /api/workshop. This was a
+              constant in src/data/seed.ts reading "Demo Company", so every
+              tenant's header claimed to be the demo and no setting could
+              change it — there was nothing behind it to set.
+
+              Falls back to the name on the user's own record, which the token
+              already carries, so the header is right on first paint rather
+              than flickering through a placeholder while the query lands. */}
+          <p className="truncate text-sm font-bold text-white">
+            {workshop?.name || user?.workshop || ''}
+          </p>
           {/* A workshop with no branches on record shows nothing here rather
               than a placeholder — this line *is* the branch, and inventing a
               name would put a location in the header that does not exist. */}

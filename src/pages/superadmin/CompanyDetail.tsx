@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeftIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Badge from '@/components/common/Badge'
+import CompanyLogo from '@/components/common/CompanyLogo'
 import { ErrorBlock, LoadingBlock, Spinner } from '@/components/common/loaders/States'
 import { ConsoleHeader } from '@/components/SuperAdmin/SuperAdminLayout'
 import CompanyEditForm from '@/components/SuperAdmin/CompanyEditForm'
@@ -90,7 +91,11 @@ export default function CompanyDetail() {
 
   return (
     <>
-      <ConsoleHeader title={company.name} subtitle={`Company code ${company.companyCode}`}>
+      <ConsoleHeader
+        title={company.name}
+        subtitle={`Company code ${company.companyCode}`}
+        icon={<CompanyLogo url={company.logoUrl} name={company.name} size="lg" />}
+      >
         <Link to="/superadmin/companies" className="btn-ghost text-xs">
           <ArrowLeftIcon className="h-4 w-4" /> All companies
         </Link>

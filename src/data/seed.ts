@@ -18,15 +18,13 @@ export const workshopInfo = {
   taxRate: 0.13,
 }
 
-/**
- * The tenant using the product. Static for now — a super-admin UI will create
- * and manage these, at which point it comes from the API.
- */
-export const company = {
-  id: 'CMP-001',
-  name: 'Demo Company',
-  shortName: 'Demo',
-}
+// The tenant used to be a constant here — `company = { name: 'Demo Company' }` —
+// read straight into the topbar. That shipped one name to every install: no
+// screen could change it, because there was no record behind it to change.
+//
+// It is a real row the workshop owns now, from GET /api/workshop, edited on the
+// Workshop settings screen. Removed rather than deprecated, so nothing can
+// quietly go on reading it.
 
 // ── Branches & fiscal years ──────────────────────────────────────────────────
 // Both used to live here as hardcoded arrays, and the topbar's two dropdowns

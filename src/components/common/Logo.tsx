@@ -4,9 +4,20 @@ import { workshopInfo } from '@/data/seed'
 const TEETH = [0, 45, 90, 135, 180, 225, 270, 315]
 
 /**
- * Product logo. `mark` is the glyph on its own; `full` adds the wordmark.
- * `textClassName` hides the wordmark responsively — the collapsed rail passes
- * `lg:hidden` so the mobile drawer keeps it.
+ * The GarageFlow product logo. `mark` is the glyph on its own; `full` adds the
+ * wordmark. `textClassName` hides the wordmark responsively — the collapsed rail
+ * passes `lg:hidden` so the mobile drawer keeps it.
+ *
+ * This is fixed product identity and takes no props that could swap it out. An
+ * earlier version accepted a workshop's own name and uploaded logo and rendered
+ * those instead, which meant uploading a company logo silently replaced the
+ * GarageFlow mark on every screen — the brand the whole interface, its colours
+ * included, is built around.
+ *
+ * A tenant's logo belongs on the documents the tenant issues: the printed
+ * invoice, which goes out under their name and not ours. It does not belong in
+ * the application's own chrome. Keep it that way — if a caller ever needs a
+ * company's mark, that is `CompanyLogo`, deliberately a separate component.
  */
 export default function Logo({
   variant = 'full',

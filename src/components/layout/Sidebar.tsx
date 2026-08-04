@@ -60,6 +60,9 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
             collapsed && 'lg:justify-center lg:px-0',
           )}
         >
+          {/* The product mark, always. A company's uploaded logo never appears
+              here — it goes on the invoices they issue, not on the application
+              they are using. */}
           <Link
             to="/"
             onClick={onClose}
