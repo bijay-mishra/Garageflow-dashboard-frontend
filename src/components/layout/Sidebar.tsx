@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import clsx from 'clsx'
-import { ChevronDownIcon, UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import Avatar from '@/components/common/Avatar'
 import Logo from '@/components/common/Logo'
 import { workshopInfo } from '@/data/seed'
 import { useGetDashboardSummary } from '@/components/Dashboard/dashboard-query'
@@ -76,21 +77,41 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* Signed-in account — its own card, with clear space under the header. */}
-        <div
-          className={clsx(
-            'mx-4 mt-3 flex shrink-0 items-center gap-2.5 rounded-md border border-ink-100 bg-white px-3 py-2',
-            collapsed && 'lg:mx-2 lg:justify-center lg:px-0',
-          )}
+        {/* Signed-in account — a card that goes somewhere. It sat here as a bare
+            line of email text, which read as a stray label rather than as the
+            account it names; the two lines now carry who you are and the row is
+            the way to your own settings. */}
+        <Link
+          to="/account"
+          onClick={onClose}
           title={user?.email}
+          className={clsx(
+            'group mx-3 mt-3 flex shrink-0 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-2.5 py-2',
+            'shadow-card transition-all duration-150 hover:border-brand-200 hover:shadow-soft',
+            collapsed && 'lg:mx-2 lg:justify-center lg:px-0 lg:py-2',
+          )}
         >
           <span className="relative flex shrink-0">
-            <UserCircleIcon className="h-6 w-6 text-ink-400" />
-            {/* Online indicator */}
-            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+            <Avatar
+              name={user?.name || user?.email || 'User'}
+              size="sm"
+              color="bg-gradient-to-br from-brand-500 to-brand-700"
+            />
+            {/* Online indicator — ringed in the card's own white so it reads as
+                sitting on top of the avatar rather than notched out of it. */}
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
           </span>
-          <p className={clsx('truncate text-xs font-medium text-ink-600', hideOnRail)}>{user?.email}</p>
-        </div>
+          <span className={clsx('min-w-0 flex-1 leading-tight', hideOnRail)}>
+            <span className="block truncate text-xs font-semibold text-ink-900">
+              {user?.name || user?.email}
+            </span>
+            {/* The role, not the email again. It is the shorter line and the one
+                that explains why the menu above looks the way it does. */}
+            <span className="block truncate text-[10px] font-medium uppercase tracking-wider text-ink-400">
+              {user?.role}
+            </span>
+          </span>
+        </Link>
 
         {/* Nav */}
         <nav className={clsx('flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-3', collapsed && 'lg:px-2')}>
@@ -173,17 +194,29 @@ function Item({
         clsx(
           'nav-link',
           isActive && 'nav-link-active',
-          depth > 0 && 'pl-9',
           collapsed && 'lg:justify-center lg:gap-0 lg:px-0',
         )
       }
     >
       {({ isActive }) => (
         <>
-          {/* Active marker — a dot in the navbar's blue, positioned absolutely so
-              it never shifts the row's layout. */}
+          {/* Active marker — a half-round arc on the sidebar's own edge rather
+              than a dot beside the label. Absolutely positioned, so it never
+              shifts the row; the negative inset cancels the nav's padding so the
+              flat side lands exactly on the sidebar edge (or, for a child row,
+              on the group's guide line).
+
+              Rail and drawer carry different padding — px-2 against px-4 — so
+              the collapsed offset only applies from `lg` up. */}
           {isActive && (
-            <span className="absolute left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-brand-700" />
+            <span
+              aria-hidden
+              className={clsx(
+                'nav-arc',
+                depth > 0 ? 'h-5 w-[3px] -left-3' : 'h-7 w-1.5 -left-4',
+                depth === 0 && collapsed && 'lg:-left-2',
+              )}
+            />
           )}
           <span className="relative flex shrink-0 items-center">
             <Icon className={clsx('shrink-0', depth > 0 ? 'h-4 w-4' : 'h-5 w-5')} />
@@ -242,15 +275,20 @@ function NavGroup({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={expanded}
-        className={clsx('nav-link w-full', hasActiveChild && 'text-ink-900')}
+        className={clsx('nav-link w-full', hasActiveChild && 'font-semibold text-ink-900')}
       >
-        <Icon className="h-5 w-5 shrink-0" />
+        <Icon className={clsx('h-5 w-5 shrink-0', hasActiveChild && 'text-brand-600')} />
         <span className="flex-1 truncate text-left">{label(item)}</span>
-        <ChevronDownIcon className={clsx('h-4 w-4 shrink-0 transition-transform', expanded && 'rotate-180')} />
+        <ChevronDownIcon
+          className={clsx('h-4 w-4 shrink-0 text-ink-400 transition-transform duration-200', expanded && 'rotate-180')}
+        />
       </button>
 
       {expanded && (
-        <div className="mt-1 space-y-1 border-l border-ink-200 pl-2">
+        // The guide line sits where the parent's icon sits, so the children read
+        // as hanging off their parent rather than as a second list. It is also
+        // what the active child's arc lands on — see `nav-arc` in Item.
+        <div className="ml-4 mt-1 space-y-1 border-l border-ink-200 pl-3">
           {children.map((child) => (
             <Item key={child.key} item={child} collapsed={false} onNavigate={onNavigate} depth={1} />
           ))}

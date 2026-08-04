@@ -85,28 +85,32 @@ export default function NotificationMenu({ buttonClassName }: { buttonClassName:
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-md border border-ink-100 bg-white shadow-soft animate-fade-in">
-          <div className="flex items-center justify-between border-b border-ink-100 px-4 py-2.5">
+        <div className="menu-panel right-0 top-full mt-2 w-80">
+          <div className="flex items-center justify-between border-b border-ink-100 px-3.5 py-3">
             <p className="text-sm font-bold text-ink-900">{t('topbar.notifications')}</p>
-            <span className="text-xs text-ink-400">
+            <span className="rounded-full bg-ink-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-500">
               {items.length} {t('notifications.recent')}
             </span>
           </div>
 
-          <ul className="max-h-80 divide-y divide-ink-100 overflow-y-auto">
+          <ul className="max-h-80 overflow-y-auto p-1.5">
             {items.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-ink-400">{t('notifications.empty')}</li>
+              <li className="px-4 py-10 text-center text-sm text-ink-400">{t('notifications.empty')}</li>
             ) : (
               items.map((a) => (
                 <li key={a.id}>
                   <button
                     onClick={() => go(a)}
-                    className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition hover:bg-ink-50"
+                    className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-ink-50"
                   >
-                    <span className={clsx('mt-1.5 h-2 w-2 shrink-0 rounded-full', DOT_FOR[a.kind] ?? 'bg-ink-400')} />
-                    <span className="min-w-0 flex-1">
+                    {/* The kind's colour, as a short bar rather than a dot — at
+                        8px round beside a two-line row it read as a bullet. */}
+                    <span
+                      className={clsx('mt-1 h-8 w-1 shrink-0 rounded-full', DOT_FOR[a.kind] ?? 'bg-ink-400')}
+                    />
+                    <span className="min-w-0 flex-1 leading-snug">
                       <span className="block text-sm text-ink-700">{a.text}</span>
-                      <span className="block text-xs text-ink-400">{timeAgo(a.at)}</span>
+                      <span className="mt-0.5 block text-[11px] text-ink-400">{timeAgo(a.at)}</span>
                     </span>
                   </button>
                 </li>

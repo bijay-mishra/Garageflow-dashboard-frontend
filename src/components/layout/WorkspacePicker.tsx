@@ -5,6 +5,7 @@ import {
   ArrowPathIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
+  CheckIcon,
   ChevronDownIcon,
   LockClosedIcon,
 } from '@heroicons/react/24/outline'
@@ -42,7 +43,7 @@ export default function WorkspacePicker() {
   const selected = fiscalYears.find((y) => y.code === fiscalYear) ?? { code: fiscalYear }
 
   return (
-    <div className="hidden items-center gap-2 xl:flex">
+    <div className="mr-1 hidden items-center gap-1.5 xl:flex">
       <Picker
         module="multiBranch"
         label={t('workspace.branch')}
@@ -82,7 +83,8 @@ export default function WorkspacePicker() {
         selected={fiscalYear}
         onSelect={setFiscalYear}
         busy={switching}
-        width="w-40"
+        // A year code is a fixed, short string — it needs no reserved width.
+        width="w-auto"
       />
     </div>
   )
@@ -103,7 +105,7 @@ function Picker({
   selected,
   onSelect,
   busy = false,
-  width = 'w-48',
+  width = 'w-44',
 }: {
   module: ModuleName
   label: string
@@ -145,35 +147,51 @@ function Picker({
 
   return (
     <div className="relative" ref={boxRef}>
+      {/* Glass, not a white card. Two solid white boxes sat on the blue bar as
+          a second, competing surface — next to the flag, the bell and the
+          avatar the right-hand cluster read as clutter. Tinted from the bar
+          itself, they sit in the same layer as every other control up there. */}
       <button
         onClick={onClick}
         className={clsx(
-          'flex h-9 items-center gap-2 rounded-md border bg-white px-2.5 text-left transition',
+          'flex h-10 items-center gap-2 rounded-lg border px-3 text-left backdrop-blur transition',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
           width,
-          unlocked ? 'border-white/30 hover:bg-ink-50' : 'cursor-pointer border-white/20 bg-white/70',
+          unlocked ? 'border-white/20 bg-white/10 hover:bg-white/20' : 'cursor-pointer border-white/10 bg-white/5',
+          open && 'border-white/40 bg-white/20',
         )}
         title={unlocked ? label : `${label} — ${t('workspace.requires')} ${MODULE_LABELS[module]}`}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <Icon className={clsx('h-4 w-4 shrink-0', unlocked ? 'text-brand-600' : 'text-ink-300')} />
-        <span className="min-w-0 flex-1">
-          <span className="block text-[9px] font-semibold uppercase leading-none tracking-wider text-ink-400">{label}</span>
-          <span className={clsx('block truncate text-xs font-semibold leading-tight', unlocked ? 'text-ink-800' : 'text-ink-400')}>
-            {value}
-          </span>
+        <Icon className={clsx('h-4 w-4 shrink-0', unlocked ? 'text-white/80' : 'text-white/35')} />
+        {/* One line, not a caption stacked over a value. The caption was 9px
+            uppercase in a 126px box, so "FISCAL YEAR" wrapped and squeezed the
+            year underneath it. The icon, the tooltip and the dropdown's own
+            heading already say which selector this is — the button only has to
+            say what is selected. */}
+        <span
+          className={clsx(
+            // A step down from the company name on the left: these are the
+            // session's settings, not the heading of the page.
+            'min-w-0 flex-1 truncate text-xs font-semibold',
+            unlocked ? 'text-white' : 'text-white/45',
+          )}
+        >
+          {value}
         </span>
         {busy ? (
-          <ArrowPathIcon className="h-3.5 w-3.5 shrink-0 animate-spin text-brand-600" />
+          <ArrowPathIcon className="h-3.5 w-3.5 shrink-0 animate-spin text-white" />
         ) : unlocked ? (
-          <ChevronDownIcon className={clsx('h-3.5 w-3.5 shrink-0 text-ink-400 transition', open && 'rotate-180')} />
+          <ChevronDownIcon className={clsx('h-3.5 w-3.5 shrink-0 text-white/60 transition', open && 'rotate-180')} />
         ) : (
-          <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-accent-500" />
+          <LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-accent-300" />
         )}
       </button>
 
       {open && unlocked && (
-        <div className="absolute right-0 z-40 mt-1 w-60 overflow-hidden rounded-md border border-ink-100 bg-white p-1 shadow-soft animate-fade-in">
+        <div className="menu-panel right-0 top-full mt-2 w-64 p-1.5">
+          <p className="menu-label">{label}</p>
           <ul role="listbox" className="max-h-72 overflow-y-auto">
             {options.map((o) => (
               <li key={o.value}>
@@ -185,12 +203,15 @@ function Picker({
                     setOpen(false)
                   }}
                   className={clsx(
-                    'w-full rounded px-2.5 py-2 text-left transition',
+                    'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors',
                     o.value === selected ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-50',
                   )}
                 >
-                  <span className="block truncate text-xs font-semibold">{o.label}</span>
-                  {o.detail && <span className="block truncate text-[10px] text-ink-400">{o.detail}</span>}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-semibold">{o.label}</span>
+                    {o.detail && <span className="mt-0.5 block truncate text-[10px] text-ink-400">{o.detail}</span>}
+                  </span>
+                  {o.value === selected && <CheckIcon className="h-4 w-4 shrink-0 text-brand-600" />}
                 </button>
               </li>
             ))}
