@@ -12,6 +12,12 @@ import { formatRs as formatRsAscii, formatNumber as formatNumberAscii } from '@/
  * `toLocaleDateString` directly is a cell that stays English forever, and that
  * is exactly the half-translated result this avoids.
  *
+ * The language is the only input, deliberately. The BS/AD switch on a date
+ * field is a typing aid for that field — it does not repaint the tables. Wiring
+ * it in here meant one person picking BS in a form left every date on every
+ * screen in BS regardless of the language, and no amount of switching the
+ * navbar brought them back.
+ *
  * Returns stable callbacks, so a table with two hundred date cells does not
  * re-render on every keystroke elsewhere on the page.
  */

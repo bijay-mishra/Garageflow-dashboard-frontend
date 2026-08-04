@@ -155,6 +155,36 @@ export function bsMonthName(month: number, language: 'en' | 'np'): string {
 export const bsMonthNames = (language: 'en' | 'np') =>
   language === 'np' ? BS_MONTHS_NE : BS_MONTHS_EN
 
+/** Gregorian month names. Both calendars need a header row in a picker. */
+const AD_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+export const adMonthNames = () => AD_MONTHS
+
+const WEEKDAYS_NE = ['आइत', 'सोम', 'मंगल', 'बुध', 'बिहि', 'शुक्र', 'शनि']
+const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/**
+ * Sunday-first, for a picker's header row.
+ *
+ * One list serves both calendars: BS and Gregorian disagree about months and
+ * years, but a week is a week — 2083/04/19 and 2026/08/04 are the same Tuesday.
+ */
+export const weekdayNames = (language: 'en' | 'np') =>
+  language === 'np' ? WEEKDAYS_NE : WEEKDAYS_EN
+
 // ── How a date is written ────────────────────────────────────────────────────
 // Year first, zero-padded, slash-separated: 2026/06/12 and 2083/05/08.
 //

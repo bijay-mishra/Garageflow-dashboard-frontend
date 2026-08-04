@@ -86,23 +86,15 @@
 
   .nav-link {
     @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-500
-           transition-all duration-150 hover:bg-white/70 hover:text-ink-900;
+           transition-colors duration-150 hover:bg-ink-50 hover:text-ink-900;
   }
 
-  /* Active is a lifted white row plus the arc marker on the sidebar's edge (see
-     `.nav-arc`), not a saturated blue pill — the rail stays quiet enough to read
-     ten rows at a glance. */
+  /* The sidebar is white, so the active row is a brand tint — a white row on a
+     white rail was the same value as its background and read as nothing at all.
+     The tint and the brand ink carry it on their own, without a marker parked
+     out on the sidebar's edge. */
   .nav-link-active {
-    @apply bg-white text-brand-700 font-semibold shadow-card;
-  }
-
-  /* The active marker: a bar pinned to the sidebar's left edge, rounded on its
-     outer side only, so it reads as a half-round arc growing out of the edge.
-     Position (`-left-*`) is set per row, since the rail, the drawer and the
-     nested children all sit at different insets. */
-  .nav-arc {
-    @apply pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-r-full bg-brand-600;
-    box-shadow: 2px 0 10px -2px rgba(37, 99, 235, 0.55);
+    @apply bg-brand-50 text-brand-700 font-semibold hover:bg-brand-50 hover:text-brand-700;
   }
 
   /* ── Popover menus ───────────────────────────────────────────────────────
@@ -205,6 +197,10 @@
 .dark .ring-white {
   --tw-ring-color: #131a2b;
 }
+/* Rings that trace a recessed panel rather than a raised one. */
+.dark .ring-ink-50 {
+  --tw-ring-color: #0b1120;
+}
 
 /* Text */
 .dark .text-ink-900 {
@@ -265,16 +261,6 @@
 }
 .dark .bg-brand-700 {
   background-color: #60a5fa;
-}
-/* The active-nav arc: brand-600 is too dark to read against the dark rail. */
-.dark .nav-arc {
-  background-color: #60a5fa;
-  box-shadow: 2px 0 12px -2px rgba(96, 165, 250, 0.65);
-}
-/* The lifted white row is only a shade off the dark rail, so it needs an edge
-   to read as raised rather than as a rendering artefact. */
-.dark .nav-link-active {
-  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
 }
 .dark .bg-accent-50 {
   background-color: rgba(245, 158, 11, 0.16);

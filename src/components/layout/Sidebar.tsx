@@ -47,7 +47,11 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
 
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-ink-100 bg-ink-50 transition-all duration-300 lg:translate-x-0',
+          // White, not ink-50. The rail used to be the same grey as the page it
+          // sits beside, so it had no edge of its own and every surface inside
+          // it — the account card, the active row — had to be white to stand
+          // out, which left nothing for the active row to stand out *against*.
+          'fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-ink-100 bg-white transition-all duration-300 lg:translate-x-0',
           collapsed ? 'lg:w-20' : 'lg:w-72',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
@@ -57,7 +61,7 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
             units track the 14px root, which made the bar 56px. */}
         <div
           className={clsx(
-            'flex h-[68px] shrink-0 items-center justify-between gap-2 border-b border-ink-100 bg-white px-4',
+            'flex h-[68px] shrink-0 items-center justify-between gap-2 border-b border-ink-100 px-4',
             collapsed && 'lg:justify-center lg:px-0',
           )}
         >
@@ -86,8 +90,11 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
           onClick={onClose}
           title={user?.email}
           className={clsx(
-            'group mx-3 mt-3 flex shrink-0 items-center gap-2.5 rounded-xl border border-ink-100 bg-white px-2.5 py-2',
-            'shadow-card transition-all duration-150 hover:border-brand-200 hover:shadow-soft',
+            // Inset rather than raised — on a white rail a white card with a
+            // shadow floated for no reason. A recessed grey panel reads as part
+            // of the chrome, which is what an account strip is.
+            'group mx-3 mt-3 flex shrink-0 items-center gap-2.5 rounded-xl border border-ink-100 bg-ink-50 px-2.5 py-2',
+            'transition-colors duration-150 hover:border-brand-200 hover:bg-brand-50',
             collapsed && 'lg:mx-2 lg:justify-center lg:px-0 lg:py-2',
           )}
         >
@@ -97,9 +104,9 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
               size="sm"
               color="bg-gradient-to-br from-brand-500 to-brand-700"
             />
-            {/* Online indicator — ringed in the card's own white so it reads as
+            {/* Online indicator — ringed in the card's own fill so it reads as
                 sitting on top of the avatar rather than notched out of it. */}
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-ink-50" />
           </span>
           <span className={clsx('min-w-0 flex-1 leading-tight', hideOnRail)}>
             <span className="block truncate text-xs font-semibold text-ink-900">
@@ -114,7 +121,12 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
         </Link>
 
         {/* Nav */}
-        <nav className={clsx('flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-3', collapsed && 'lg:px-2')}>
+        <nav
+          className={clsx(
+            'flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-3',
+            collapsed && 'lg:px-2',
+          )}
+        >
           {loading ? (
             // Grey bars rather than an empty rail. A menu that arrives a beat
             // late should look like it is arriving, not like it is missing.
@@ -147,7 +159,14 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
         </nav>
 
         {/* Support card — hidden on the rail */}
-        <div className={clsx('m-4 rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 p-4 text-white shadow-glow', hideOnRail)}>
+        <div
+          className={clsx(
+            // Aligned to the same 12px gutter as the account card and the nav
+            // rows above it, so the rail has one left edge rather than three.
+            'm-3 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 p-4 text-white shadow-glow',
+            hideOnRail,
+          )}
+        >
           <p className="text-sm font-semibold">{t('sidebar.upgradeTitle')}</p>
           <p className="mt-1 text-xs text-brand-100">{t('sidebar.upgradeText')}</p>
           <Link
@@ -198,40 +217,21 @@ function Item({
         )
       }
     >
-      {({ isActive }) => (
-        <>
-          {/* Active marker — a half-round arc on the sidebar's own edge rather
-              than a dot beside the label. Absolutely positioned, so it never
-              shifts the row; the negative inset cancels the nav's padding so the
-              flat side lands exactly on the sidebar edge (or, for a child row,
-              on the group's guide line).
-
-              Rail and drawer carry different padding — px-2 against px-4 — so
-              the collapsed offset only applies from `lg` up. */}
-          {isActive && (
-            <span
-              aria-hidden
-              className={clsx(
-                'nav-arc',
-                depth > 0 ? 'h-5 w-[3px] -left-3' : 'h-7 w-1.5 -left-4',
-                depth === 0 && collapsed && 'lg:-left-2',
-              )}
-            />
-          )}
-          <span className="relative flex shrink-0 items-center">
-            <Icon className={clsx('shrink-0', depth > 0 ? 'h-4 w-4' : 'h-5 w-5')} />
-            {/* On the rail the count collapses into a dot on the icon. */}
-            {collapsed && badge > 0 && (
-              <span className="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-brand-600 ring-2 ring-ink-50 lg:block" />
-            )}
-          </span>
-          <span className={clsx('flex-1 truncate', hideOnRail)}>{text}</span>
-          {badge > 0 && (
-            <span className={clsx('rounded-full bg-brand-600 px-1.5 py-0.5 text-xs font-bold text-white', hideOnRail)}>
-              {badge > 99 ? '99+' : badge}
-            </span>
-          )}
-        </>
+      {/* No edge marker. The active row is carried by its own tint and brand
+          ink — a bar pinned to the sidebar's edge sat outside the row it was
+          describing and read as a stray control rather than as emphasis. */}
+      <span className="relative flex shrink-0 items-center">
+        <Icon className={clsx('shrink-0', depth > 0 ? 'h-4 w-4' : 'h-5 w-5')} />
+        {/* On the rail the count collapses into a dot on the icon. */}
+        {collapsed && badge > 0 && (
+          <span className="absolute -right-1 -top-1 hidden h-2 w-2 rounded-full bg-brand-600 ring-2 ring-white lg:block" />
+        )}
+      </span>
+      <span className={clsx('flex-1 truncate', hideOnRail)}>{text}</span>
+      {badge > 0 && (
+        <span className={clsx('rounded-full bg-brand-600 px-1.5 py-0.5 text-xs font-bold text-white', hideOnRail)}>
+          {badge > 99 ? '99+' : badge}
+        </span>
       )}
     </NavLink>
   )
@@ -286,9 +286,8 @@ function NavGroup({
 
       {expanded && (
         // The guide line sits where the parent's icon sits, so the children read
-        // as hanging off their parent rather than as a second list. It is also
-        // what the active child's arc lands on — see `nav-arc` in Item.
-        <div className="ml-4 mt-1 space-y-1 border-l border-ink-200 pl-3">
+        // as hanging off their parent rather than as a second list.
+        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-ink-200 pl-3">
           {children.map((child) => (
             <Item key={child.key} item={child} collapsed={false} onNavigate={onNavigate} depth={1} />
           ))}

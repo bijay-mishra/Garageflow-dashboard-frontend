@@ -154,10 +154,19 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
               <FormikDropdown name="status" label="Status" formik={formik} options={statusOptions} isClearable={false} />
             )}
             <Input name="odometer" label="Odometer (km)" type="number" formik={formik} min={0} isRequired />
-            {/* Follows the interface language: a native picker in English,
-                BS year/month/day selects in Nepali. Either way the value on the
-                form is an ISO Gregorian day, so nothing downstream changes. */}
-            <DateInput name="promisedAt" label="Promised date" formik={formik} isRequired />
+            {/* Typed and picked in BS or AD — the flag button on the field
+                switches, and every date on screen follows. Either way the value
+                on the form is an ISO Gregorian day, so nothing downstream
+                changes. */}
+            {/* Two columns: a date plus its calendar controls does not fit the
+                width a priority dropdown needs. */}
+            <DateInput
+              name="promisedAt"
+              label="Promised date"
+              formik={formik}
+              isRequired
+              className="sm:col-span-2"
+            />
           </div>
 
           <JobLinesField formik={formik} vehicleType={vehicleType} />
