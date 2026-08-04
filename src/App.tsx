@@ -19,6 +19,7 @@ import Reports from '@/pages/Reports'
 import Plans from '@/pages/Plans'
 import WorkshopSettings from '@/pages/WorkshopSettings'
 import Staff from '@/pages/Staff'
+import Support from '@/pages/Support'
 import RoleMenus from '@/pages/RoleMenus'
 import Configuration from '@/pages/Configuration'
 import SuperAdminLogin from '@/pages/SuperAdminLogin'
@@ -28,6 +29,7 @@ import SuperAdminOverview from '@/pages/superadmin/Overview'
 import SuperAdminCompanies from '@/pages/superadmin/Companies'
 import SuperAdminCompanyDetail from '@/pages/superadmin/CompanyDetail'
 import SuperAdminConfiguration from '@/pages/superadmin/Configuration'
+import SuperAdminSupport from '@/pages/superadmin/Support'
 import SuperAdminAudit from '@/pages/superadmin/AuditLog'
 import NotFound from '@/pages/NotFound'
 
@@ -53,6 +55,7 @@ export default function App() {
         <Route path="overview" element={<SuperAdminOverview />} />
         <Route path="companies" element={<SuperAdminCompanies />} />
         <Route path="companies/:code" element={<SuperAdminCompanyDetail />} />
+        <Route path="support" element={<SuperAdminSupport />} />
         <Route path="configuration" element={<SuperAdminConfiguration />} />
         <Route path="audit" element={<SuperAdminAudit />} />
       </Route>
@@ -110,6 +113,10 @@ export default function App() {
             and deciding what they see is not an add-on. */}
         <Route path="role-menus" element={<RoleMenus />} />
         <Route path="configuration" element={<Configuration />} />
+
+        {/* Not module-gated. A workshop that can be asked a question can always
+            answer it, and a hidden inbox is an unanswered customer. */}
+        <Route path="support" element={<Support />} />
 
         {/* Optional, and hidden from the sidebar when off. Wrapped here as well
             so a bookmark or a pasted link lands on an explanation rather than on

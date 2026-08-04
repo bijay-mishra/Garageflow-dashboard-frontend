@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import ImpersonationBanner from '@/components/SuperAdmin/ImpersonationBanner'
+import SupportWidget, { showSupportWidget } from '@/components/Support/SupportWidget'
 import { useGetCurrentUser } from '@/components/Auth/auth-query'
 import { useAuth } from '@/context/AuthContext'
 
@@ -16,7 +17,7 @@ export default function Layout() {
   // from localStorage is only a claim: this is what catches an account that was
   // deactivated or a name that changed elsewhere. A dead token 401s here, and
   // the request layer ends the session.
-  const { setUser } = useAuth()
+  const { setUser, user } = useAuth()
   const { data: currentUser } = useGetCurrentUser()
 
   useEffect(() => {
@@ -41,6 +42,12 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* The workshop's own line to GarageFlow. Floats over the content on
+          purpose: the questions it answers are asked *while* somebody is stuck
+          on another screen, and making them navigate away to ask about the
+          screen they are on is the wrong shape. */}
+      {showSupportWidget(user?.role) && <SupportWidget />}
     </div>
   )
 }
