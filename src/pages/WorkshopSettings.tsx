@@ -234,10 +234,13 @@ export default function WorkshopSettings() {
 /**
  * Whether customers browsing the app can find this garage.
  *
- * Off by default, and that is a deliberate choice rather than an oversight. A
- * workshop that bought this to run its own books has not agreed to be listed in
- * a public directory, and putting its name, address and phone number in front of
- * strangers is not a decision the software gets to make for it.
+ * On by default — and it did not start that way. Listing was opt-in, so that a
+ * workshop which bought this to run its own books was never advertised without
+ * agreeing to be. The intent was right; the result was a directory containing
+ * one garage, because nobody knew the switch existed to turn on.
+ *
+ * So it is opt-out now. A garage that does not want to be found still says so
+ * here — it just has to say so, rather than having it assumed on its behalf.
  */
 function Listing({ formik }: { formik: FormikProps<WorkshopFormType> }) {
   const listed = formik.values.isListed
@@ -256,7 +259,7 @@ function Listing({ formik }: { formik: FormikProps<WorkshopFormType> }) {
         checked={listed}
         onChange={(next) => formik.setFieldValue('isListed', next)}
         label="List this garage in the app"
-        hint="Shows your name, address, phone and opening hours to anyone browsing."
+        hint="Shows your name, address, phone and opening hours to anyone browsing. On by default — switch it off to stay out of the directory."
       />
 
       <div>
