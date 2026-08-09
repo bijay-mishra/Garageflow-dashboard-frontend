@@ -1,7 +1,9 @@
 {
+  "//baseUrl": "Backend origin per host. The key is the first label of the hostname the dashboard is served from, or the whole address when that is a bare IP. Read at run time, so a deployed build is repointed by editing this file and reloading - no rebuild. To run the UI locally against the live API instead, set VITE_API_BASE in .env.local; it wins over everything here.",
   "baseUrl": [
     {
       "localhost": "http://localhost:5100",
+      "202.51.3.68": "http://202.51.3.68:8013",
       "garageflow": "https://api.garageflow.com.np"
     }
   ],

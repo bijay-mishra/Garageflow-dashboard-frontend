@@ -37,10 +37,29 @@ const FALLBACK: RuntimeConfig = {
 
 let config: RuntimeConfig = { ...FALLBACK }
 
-/** First label of the hostname — "demo.garageflow.com" → "demo". */
+/** A bare IPv4 literal — matches 202.51.3.68, not garageflow.com.np. */
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+
+/**
+ * Key into `baseUrl` for the current host.
+ *
+ * Normally the first label of the hostname — "demo.garageflow.com" → "demo".
+ *
+ * An IP address has no subdomain to take, and splitting one on "." yields its
+ * first octet: served from 202.51.3.68 the lookup would ask for "202", miss,
+ * and fall through to the `localhost` entry — quietly pointing a deployed
+ * dashboard at a developer's machine, which fails as a connection refused with
+ * nothing to say why. So an IPv4 host is used whole, and config.json keys it
+ * whole.
+ *
+ * The port is deliberately not part of the key. The dashboard and the API sit
+ * on different ports of the same box, and moving either one should not mean
+ * editing this file.
+ */
 function subdomain(): string {
   const host = typeof window === 'undefined' ? 'localhost' : window.location.hostname
   if (host === 'localhost' || host === '127.0.0.1') return 'localhost'
+  if (IPV4.test(host)) return host
   return host.split('.')[0]
 }
 
