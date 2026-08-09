@@ -4,7 +4,8 @@
       "localhost": "http://localhost:5100",
       "202.51.3.68": "http://202.51.3.68:8013",
       "garageflow": "https://api.garageflow.com.np",
-      "garageflow-dashboard": "http://202.51.3.68:8013"
+      "garageflow-dashboard": "http://202.51.3.68:8013",
+      "garageflow-dashboard-frontend": ""
     }
   ],
   "serviceUrl": {
