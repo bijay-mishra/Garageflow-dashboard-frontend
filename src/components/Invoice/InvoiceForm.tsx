@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import Modal from '@/components/common/modals/Modal'
 import Input from '@/components/common/form/Input'
@@ -7,7 +7,7 @@ import { Spinner } from '@/components/common/loaders/States'
 import { useGetJobCardList } from '@/components/JobCard/jobcard-query'
 import { workshopInfo } from '@/data/seed'
 import { formatRs, todayISO } from '@/lib/format'
-import { useAddInvoice, useGetInvoiceList } from './invoice-query'
+import { useAddInvoice, useGetInvoiceDiscounts, useGetInvoiceList } from './invoice-query'
 import {
   PAYMENT_METHODS,
   calculateInvoiceTotals,
@@ -50,6 +50,11 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
           // letting it silently shrink would be confusing.
           paid: Math.min(values.paid, total),
           method: values.paid > 0 ? values.method : null,
+          // Intent, not amounts. The server works out what each is worth and
+          // clamps it — a client that could name a discount could invent one.
+          applyOffers: useOffer,
+          useLoyaltyReward: useReward,
+          pointsToRedeem: usePoints ? (quote?.redeemablePoints ?? 0) : 0,
         })
         onClose()
       } catch {
@@ -60,6 +65,18 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
 
   const selectedJob = jobs.find((j) => j.id === formik.values.jobCardId)
   const totals = calculateInvoiceTotals(selectedJob?.total ?? 0, formik.values.taxRate)
+
+  // What this customer could have off, fetched once a job is chosen. The
+  // advisor has to see "they have a free wash waiting" while they are still
+  // deciding, not after the bill is raised.
+  const { data: quote } = useGetInvoiceDiscounts(formik.values.jobCardId || null)
+
+  // An offer is the shop's own promotion and applies unless declined; a reward
+  // and points are the customer's to spend and are opt-in. Same defaults the
+  // API uses, so the preview and the bill agree.
+  const [useOffer, setUseOffer] = useState(true)
+  const [useReward, setUseReward] = useState(false)
+  const [usePoints, setUsePoints] = useState(false)
 
   const jobOptions = useMemo(
     () =>
@@ -135,6 +152,64 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
               <span className="font-bold text-ink-900">Total</span>
               <span className="text-lg font-bold text-brand-600">{formatRs(totals.total)}</span>
             </div>
+
+            {/* What the server would knock off. Advisory only — the amounts are
+                recomputed when the invoice is raised, so a reward spent on
+                another till in the meantime cannot be spent twice here. */}
+            {quote && (quote.rewardsAvailable > 0 || quote.offerAmount > 0 || quote.redeemablePoints > 0) && (
+              <div className="mt-3 space-y-2 border-t border-ink-200 pt-3">
+                {quote.offerAmount > 0 && (
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={useOffer}
+                      onChange={(e) => setUseOffer(e.target.checked)}
+                    />
+                    <span className="text-ink-600">
+                      {quote.offerName} — <strong>−{formatRs(quote.offerAmount)}</strong>
+                    </span>
+                  </label>
+                )}
+
+                {quote.rewardsAvailable > 0 && (
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={useReward}
+                      onChange={(e) => setUseReward(e.target.checked)}
+                    />
+                    <span className="text-ink-600">
+                      Loyalty reward: {quote.rewardName} free —{' '}
+                      <strong>−{formatRs(quote.rewardAmount)}</strong>
+                      <span className="block text-xs text-ink-400">
+                        {quote.rewardsAvailable} available. Theirs to save for a bigger bill, so it
+                        is off unless asked for.
+                      </span>
+                    </span>
+                  </label>
+                )}
+
+                {quote.redeemablePoints > 0 && (
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={usePoints}
+                      onChange={(e) => setUsePoints(e.target.checked)}
+                    />
+                    <span className="text-ink-600">
+                      Spend {quote.redeemablePoints} points —{' '}
+                      <strong>−{formatRs(quote.pointsAmount)}</strong>
+                      <span className="block text-xs text-ink-400">
+                        {quote.pointsBalance} on the account.
+                      </span>
+                    </span>
+                  </label>
+                )}
+              </div>
+            )}
           </div>
         )}
 

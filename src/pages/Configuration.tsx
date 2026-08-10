@@ -2,14 +2,16 @@ import { useState } from 'react'
 import StickyHeader from '@/components/common/headers/StickyHeader'
 import FiscalYearPanel from '@/components/Configuration/FiscalYearPanel'
 import BranchPanel from '@/components/Configuration/BranchPanel'
+import OffersPanel from '@/components/Configuration/OffersPanel'
 import { useAuth } from '@/context/AuthContext'
 import { ArrowLeftIcon, ChevronRightIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
-type SectionId = 'fiscal' | 'branches'
+type SectionId = 'fiscal' | 'branches' | 'offers'
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'fiscal', label: 'Fiscal Year' },
   { id: 'branches', label: 'Branch' },
+  { id: 'offers', label: 'Offers & Rewards' },
 ]
 
 /**
@@ -56,6 +58,13 @@ export default function Configuration() {
 
         {open.id === 'fiscal' && <FiscalYearPanel />}
         {open.id === 'branches' && <BranchPanel />}
+        {/* Three stacked cards rather than one, so the gap between them does
+            the same job the drilled-in layout does for the other sections. */}
+        {open.id === 'offers' && (
+          <div className="space-y-4">
+            <OffersPanel />
+          </div>
+        )}
       </div>
     )
   }

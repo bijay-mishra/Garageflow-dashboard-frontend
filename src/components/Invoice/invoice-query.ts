@@ -8,6 +8,7 @@ import { invoiceApi } from './invoice-api'
 import type {
   IAddInvoiceRequest,
   ICollections,
+  IDiscountQuote,
   IInvoice,
   IInvoicePrint,
   IInvoiceSummary,
@@ -69,6 +70,27 @@ export const useGetInvoicePrint = (id: string | null) =>
         pathVariables: { id: id as string },
       }),
     enabled: !!id,
+    staleTime: 0,
+    select: (res) => res?.data?.data ?? null,
+  })
+
+/**
+ * What a job's bill could have off it, before anything is applied.
+ *
+ * `staleTime: 0`, for the same reason the print query has it: a reward spent at
+ * another till thirty seconds ago must not still be offered here. The server
+ * recomputes on save regardless, so a stale read costs a confusing tick rather
+ * than a wrong bill — but a confusing tick at a counter is still worth avoiding.
+ */
+export const useGetInvoiceDiscounts = (jobCardId: string | null) =>
+  useQuery({
+    queryKey: [invoiceApi.getInvoiceDiscounts.actionName, jobCardId],
+    queryFn: () =>
+      initApiRequest<IDiscountQuote>({
+        apiDetails: invoiceApi.getInvoiceDiscounts,
+        pathVariables: { jobCardId: jobCardId as string },
+      }),
+    enabled: !!jobCardId,
     staleTime: 0,
     select: (res) => res?.data?.data ?? null,
   })

@@ -23,8 +23,19 @@ export interface IInvoice {
   vehiclePlate: string
   issuedAt: string
   subtotal: number
+  /** Money off before tax — a loyalty reward, an offer, or points. 0 on most bills. */
+  discount: number
+  /**
+   * Why, in words: "Dashain week (15%) + 400 points". Empty when there is no
+   * discount. Written once when the bill is raised and never recomputed, so it
+   * keeps reading correctly after the offer behind it is edited or deleted.
+   */
+  discountNote: string
+  /** Points spent on this bill. */
+  pointsRedeemed: number
   /** Fractional rate, e.g. 0.13 for 13% VAT. */
   taxRate: number
+  /** On the subtotal *after* the discount — a pre-tax discount reduces the tax with it. */
   tax: number
   total: number
   paid: number
@@ -32,6 +43,29 @@ export interface IInvoice {
   due: number
   status: InvoiceStatus
   method: PaymentMethod | null
+}
+
+/**
+ * What a bill could have off it, from `GET /api/invoices/discounts/{jobCardId}`.
+ *
+ * Each amount is already measured after the ones above it, so they add up
+ * without double-counting: a Rs 800 reward against a bill an offer has reduced
+ * to Rs 500 reports Rs 500.
+ */
+export interface IDiscountQuote {
+  offerId: string | null
+  offerName: string | null
+  offerAmount: number
+  /** Free services this customer has earned and not yet spent. */
+  rewardsAvailable: number
+  rewardName: string | null
+  rewardAmount: number
+  pointsBalance: number
+  /** Points that may be spent on this bill — capped by balance, ceiling and bill. */
+  redeemablePoints: number
+  pointsAmount: number
+  /** Everything applied at once. */
+  maxDiscount: number
 }
 
 /** Billing totals from `GET /api/invoices/summary`. */
@@ -155,6 +189,16 @@ export interface IAddInvoiceRequest {
   taxRate: number
   paid: number
   method: PaymentMethod | null
+
+  // Intent, never amounts. The server decides what each is worth and clamps it
+  // — a client that could name a discount could invent one.
+
+  /** Let a running offer apply. Defaults to true server-side. */
+  applyOffers?: boolean
+  /** Spend one of the customer's earned free services. */
+  useLoyaltyReward?: boolean
+  /** Points to put against the bill; clamped to what is actually available. */
+  pointsToRedeem?: number
 }
 
 // ── Record payment ───────────────────────────────────────────────────────────

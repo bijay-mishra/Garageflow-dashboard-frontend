@@ -174,6 +174,26 @@ export default function InvoiceDocument({ doc, workshop }: InvoiceDocumentProps)
               <td className="py-1">Subtotal</td>
               <td className="py-1 text-right tabular-nums">{formatRs(invoice.subtotal, true)}</td>
             </tr>
+            {/* Only on bills that carry one, so an ordinary invoice keeps the
+                three-line totals block it has always had. The note is printed
+                beside the amount because "why is this cheaper?" is a question
+                the customer asks at the counter, not one to leave to the
+                advisor's memory. */}
+            {invoice.discount > 0 && (
+              <tr>
+                <td className="py-1">
+                  Discount
+                  {invoice.discountNote && (
+                    <span className="block text-[8pt] leading-tight text-ink-500">
+                      {invoice.discountNote}
+                    </span>
+                  )}
+                </td>
+                <td className="py-1 text-right tabular-nums">
+                  −{formatRs(invoice.discount, true)}
+                </td>
+              </tr>
+            )}
             <tr>
               <td className="py-1">
                 VAT {(invoice.taxRate * 100).toFixed(invoice.taxRate * 100 % 1 === 0 ? 0 : 2)}%

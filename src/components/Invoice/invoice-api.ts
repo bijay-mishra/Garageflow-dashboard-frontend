@@ -46,6 +46,20 @@ export const invoiceApi = {
     requestMethod: RequestMethod.GET,
   },
 
+  /**
+   * What a job's bill would qualify for — a running offer, an earned free
+   * service, spendable points — without applying any of it.
+   *
+   * Keyed by job card rather than by invoice because it is asked *before* the
+   * invoice exists: the advisor needs to know what is available while they are
+   * still deciding what to charge.
+   */
+  getInvoiceDiscounts: {
+    actionName: 'GET_INVOICE_DISCOUNTS',
+    controllerName: '/invoices/discounts/{jobCardId}',
+    requestMethod: RequestMethod.GET,
+  },
+
   addInvoice: {
     actionName: 'ADD_INVOICE',
     controllerName: '/invoices',
