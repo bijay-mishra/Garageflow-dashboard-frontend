@@ -26,7 +26,7 @@ export default function CustomerTable({
   onStateChange,
   loading,
 }: CustomerTableProps) {
-  const { date, rs } = useDateFormat()
+  const { date, amount } = useDateFormat()
 
   const columns = useMemo<Column<ICustomer>[]>(
     () => [
@@ -60,7 +60,7 @@ export default function CustomerTable({
         header: 'Total spent',
         align: 'right',
         sortValue: (c) => c.totalSpent,
-        render: (c) => <span className="font-semibold text-ink-900">{rs(c.totalSpent)}</span>,
+        render: (c) => <span className="font-semibold text-ink-900">{amount(c.totalSpent)}</span>,
       },
       {
         key: 'createdAt',
@@ -77,7 +77,7 @@ export default function CustomerTable({
         ),
       },
     ],
-    [onEdit, onDelete, date, rs],
+    [onEdit, onDelete, date, amount],
   )
   return (
     <DataTable

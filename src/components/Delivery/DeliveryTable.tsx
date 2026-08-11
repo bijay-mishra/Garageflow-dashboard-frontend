@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { TruckIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge from '@/components/common/Badge'
-import { formatRs } from '@/lib/format'
+import { formatAmount } from '@/lib/format'
 import {
   methodLabel,
   statusLabel,
@@ -78,7 +78,7 @@ export default function DeliveryTable({
           ) : d.fee === 0 ? (
             <span className="text-xs font-semibold text-emerald-600">Free</span>
           ) : (
-            <span className="font-semibold text-ink-900">{formatRs(d.fee)}</span>
+            <span className="font-semibold text-ink-900">{formatAmount(d.fee)}</span>
           ),
       },
       {

@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import { useLang } from '@/context/LanguageContext'
 import { formatDateIn, otherCalendar, toNepaliDigits } from '@/lib/nepaliDate'
-import { formatRs as formatRsAscii, formatNumber as formatNumberAscii } from '@/lib/format'
+import {
+  formatRs as formatRsAscii,
+  formatAmount as formatAmountAscii,
+  formatNumber as formatNumberAscii,
+} from '@/lib/format'
 
 /**
  * Dates and numbers, in whichever calendar and numerals the navbar is set to.
@@ -50,6 +54,23 @@ export function useDateFormat() {
     [lang],
   )
 
+  /**
+   * Money without the "Rs", for table columns.
+   *
+   * Same digits and grouping as [rs], same language rule — only the prefix
+   * goes. A column headed "Total" does not need every row to repeat the
+   * currency, and dropping it makes the figures line up and compare down the
+   * column. Keep [rs] for anything standing on its own: a total in a form, a
+   * stat tile, an invoice.
+   */
+  const amount = useCallback(
+    (value: number, withDecimals = false) => {
+      const ascii = formatAmountAscii(value, withDecimals)
+      return lang === 'np' ? toNepaliDigits(ascii) : ascii
+    },
+    [lang],
+  )
+
   const number = useCallback(
     (value: number) => {
       const ascii = formatNumberAscii(value)
@@ -71,7 +92,7 @@ export function useDateFormat() {
   )
 
   return useMemo(
-    () => ({ date, alternate, rs, number, digits, lang }),
-    [date, alternate, rs, number, digits, lang],
+    () => ({ date, alternate, rs, amount, number, digits, lang }),
+    [date, alternate, rs, amount, number, digits, lang],
   )
 }

@@ -12,7 +12,6 @@ import { useAddJobCard, useUpdateJobCard } from './jobcard-query'
 import {
   JOB_PRIORITIES,
   JOB_STATUSES,
-  MECHANICS,
   jobCardFormSchema,
   jobLinesTotal,
   toJobCardFormValues,
@@ -63,15 +62,28 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
     [vehicles, formik.values.vehicleId],
   )
 
-  // Real mechanic accounts, falling back to the hardcoded list only while none
-  // exist. This is the loop that matters: a name assigned here has to match a
-  // login created on the Staff screen, or the job is invisible in the app.
-  const { data: mechanics = [] } = useGetMechanicList()
+  // Only real mechanic accounts. There is no fallback list: a name in this
+  // dropdown with no login behind it produces a job that the dashboard shows as
+  // assigned and the mechanic app cannot see, which is indistinguishable from
+  // the app being broken.
+  const { data: mechanics = [], isLoading: loadingMechanics } = useGetMechanicList()
 
-  const mechanicOptions = useMemo(
-    () => (mechanics.length > 0 ? mechanics : MECHANICS).map((m) => ({ label: m, value: m })),
-    [mechanics],
-  )
+  const mechanicOptions = useMemo(() => {
+    const options = mechanics.map((m) => ({ label: m, value: m, detail: 'Can sign into the app' }))
+
+    // An older job may already carry a name that no account matches — every
+    // job seeded before the Staff screen existed does. Dropping it from the
+    // options would blank the field and silently unassign the job on save, so
+    // it is kept and labelled instead. That label is the whole point: it says
+    // out loud why that mechanic never saw this job.
+    const current = formik.values.mechanic?.trim()
+
+    if (current && !mechanics.includes(current)) {
+      options.unshift({ label: current, value: current, detail: 'No app account — cannot see this job' })
+    }
+
+    return options
+  }, [mechanics, formik.values.mechanic])
   const priorityOptions = useMemo(() => JOB_PRIORITIES.map((p) => ({ label: p, value: p })), [])
   const statusOptions = useMemo(() => JOB_STATUSES.map((s) => ({ label: s, value: s })), [])
 
@@ -120,13 +132,26 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
                 if (vehicle) formik.setFieldValue('odometer', vehicle.odometer)
               }}
             />
-            <FormikDropdown
-              name="mechanic"
-              label="Assigned mechanic"
-              formik={formik}
-              options={mechanicOptions}
-              isClearable={false}
-            />
+            <div>
+              <FormikDropdown
+                name="mechanic"
+                label="Assigned mechanic"
+                formik={formik}
+                options={mechanicOptions}
+                isLoading={loadingMechanics}
+                placeholder="Unassigned — pick someone later"
+              />
+
+              {/* The dropdown being empty is not a loading glitch, and an
+                  advisor staring at it has no way to know that. Say what is
+                  missing and where to fix it. */}
+              {!loadingMechanics && mechanics.length === 0 && (
+                <p className="mt-1.5 text-xs text-amber-600">
+                  No mechanic accounts yet. Add them under Staff — a job can only reach the app if it is
+                  assigned to a mechanic who can sign in.
+                </p>
+              )}
+            </div>
           </div>
 
           <div>

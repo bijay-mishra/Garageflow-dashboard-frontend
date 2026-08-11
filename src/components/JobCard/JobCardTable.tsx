@@ -27,7 +27,7 @@ export default function JobCardTable({
   onStateChange,
   loading,
 }: JobCardTableProps) {
-  const { date, rs } = useDateFormat()
+  const { date, amount } = useDateFormat()
 
   const columns = useMemo<Column<IJobCard>[]>(
     () => [
@@ -76,7 +76,7 @@ export default function JobCardTable({
         header: 'Total',
         align: 'right',
         sortValue: (j) => j.total,
-        render: (j) => <span className="font-semibold text-ink-900">{rs(j.total)}</span>,
+        render: (j) => <span className="font-semibold text-ink-900">{amount(j.total)}</span>,
       },
       {
         key: 'actions',
@@ -87,7 +87,7 @@ export default function JobCardTable({
         ),
       },
     ],
-    [onEdit, onDelete, onStatusChange, date, rs],
+    [onEdit, onDelete, onStatusChange, date, amount],
   )
 
   return (

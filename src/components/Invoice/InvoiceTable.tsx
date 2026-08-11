@@ -36,7 +36,7 @@ export default function InvoiceTable({
   onStateChange,
   loading,
 }: InvoiceTableProps) {
-  const { date, rs } = useDateFormat()
+  const { date, amount } = useDateFormat()
 
   const columns = useMemo<Column<IInvoice>[]>(
     () => [
@@ -63,7 +63,7 @@ export default function InvoiceTable({
         header: 'Total',
         align: 'right',
         sortValue: (i) => i.total,
-        render: (i) => <span className="font-semibold text-ink-900">{rs(i.total)}</span>,
+        render: (i) => <span className="font-semibold text-ink-900">{amount(i.total)}</span>,
       },
       {
         key: 'due',
@@ -71,7 +71,7 @@ export default function InvoiceTable({
         align: 'right',
         sortValue: (i) => i.due,
         render: (i) => (
-          <span className="font-semibold text-rose-600">{i.due > 0 ? rs(i.due) : '—'}</span>
+          <span className="font-semibold text-rose-600">{i.due > 0 ? amount(i.due) : '—'}</span>
         ),
       },
       {
@@ -128,7 +128,7 @@ export default function InvoiceTable({
         ),
       },
     ],
-    [onRecordPayment, date, rs],
+    [onRecordPayment, date, amount],
   )
 
   return (

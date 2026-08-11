@@ -18,6 +18,19 @@ export function formatRs(amount: number, withDecimals = false): string {
   return `Rs ${sign}${result}${decPart ? '.' + decPart : ''}`
 }
 
+/**
+ * The same number without the "Rs", e.g. 125000 -> "1,25,000".
+ *
+ * For table columns. A money column is already headed "Total" or "Amount", so
+ * repeating the currency on every row is noise that makes the figures harder to
+ * scan and compare down the column — which is the one thing a table of amounts
+ * exists for. Documents keep the prefix: an invoice leaves the building and has
+ * to say what currency it is in.
+ */
+export function formatAmount(amount: number, withDecimals = false): string {
+  return formatRs(amount, withDecimals).replace(/^Rs\s*/, '')
+}
+
 /** Compact currency, e.g. 1250000 -> "Rs 12.50L". */
 export function formatRsCompact(amount: number): string {
   if (amount >= 10000000) return `Rs ${(amount / 10000000).toFixed(2)} Cr`

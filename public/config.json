@@ -1,10 +1,12 @@
 {
+  "//baseUrl": "Which API each host talks to. The key is the FIRST LABEL of the browser's hostname (app.bijayamishra.com.np -> 'app'), or the whole address when it is a bare IP. Port is never part of the key.",
   "baseUrl": [
     {
       "localhost": "http://localhost:5100",
-      "202.51.3.68": "http://202.51.3.68:8013",
-      "garageflow": "https://api.garageflow.com.np",
-      "garageflow-dashboard": "http://202.51.3.68:8013",
+      "app": "https://app.bijayamishra.com.np",
+      "202.51.3.68": "https://app.bijayamishra.com.np",
+      "garageflow": "https://app.bijayamishra.com.np",
+      "garageflow-dashboard": "https://app.bijayamishra.com.np",
       "garageflow-dashboard-frontend": ""
     }
   ],

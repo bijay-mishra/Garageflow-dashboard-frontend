@@ -3,7 +3,7 @@ import { SparklesIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge, { type BadgeTone } from '@/components/common/Badge'
 import EntityActions from '@/components/common/buttons/EntityActions'
-import { formatRs } from '@/lib/format'
+import { formatAmount } from '@/lib/format'
 import {
   appliesToLabel,
   formatDuration,
@@ -82,7 +82,7 @@ export default function ServiceTable({
         header: 'Price',
         align: 'right',
         sortValue: (s) => s.price,
-        render: (s) => <span className="font-bold text-ink-900">{formatRs(s.price)}</span>,
+        render: (s) => <span className="font-bold text-ink-900">{formatAmount(s.price)}</span>,
       },
       {
         key: 'timesUsed',

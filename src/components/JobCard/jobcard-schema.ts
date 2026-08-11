@@ -35,10 +35,19 @@ export type JobLineKind = (typeof JOB_LINE_KINDS)[number]
 export const BOARD_STATUSES: JobStatus[] = ['Open', 'In Progress', 'Awaiting Parts', 'Completed']
 
 /**
- * Mechanics available for assignment. Hardcoded until the API grows a staff
- * endpoint; the API accepts any string, so this list only shapes the dropdown.
+ * There is deliberately no hardcoded mechanic list here any more.
+ *
+ * There used to be one — four invented names — from before the Staff screen
+ * existed. It did real damage: `jobCardInitialValues` defaulted to the first of
+ * them, so an advisor who opened the form and never touched the dropdown
+ * assigned the job to a person with no login. The API stores the name happily,
+ * the dashboard shows it happily, and the mechanic app finds nothing, because
+ * it matches job.mechanic against the MechanicName on a real account.
+ *
+ * The names now come from `useGetMechanicList` — accounts that exist and can
+ * sign in — and the field starts empty, so assigning is a choice rather than a
+ * default nobody noticed.
  */
-export const MECHANICS = ['Suresh Lama', 'Kiran Adhikari', 'Ramesh Bhandari', 'Dipesh Shakya']
 
 export interface IJobLine {
   description: string
@@ -130,7 +139,10 @@ export const jobCardInitialValues: JobCardFormType = {
   complaint: '',
   status: 'Open',
   priority: 'Normal',
-  mechanic: MECHANICS[0],
+  // Empty, not a name. A job may legitimately be opened before anyone knows who
+  // will work it — the API supports assigning later — but it must never be
+  // assigned to somebody by accident.
+  mechanic: '',
   odometer: 0,
   promisedAt: todayISO(),
   lines: [{ ...emptyJobLine }],
