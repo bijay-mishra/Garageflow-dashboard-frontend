@@ -198,7 +198,10 @@ export default function DataTable<T>({
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={`hover:bg-ink-50/50 ${onRowClick ? 'cursor-pointer' : ''}`}
                 >
-                  {showIndex && <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-400">{offset + i + 1}</td>}
+                  {/* Same weight and colour as every other cell: the row number
+                      is data, not a label, and having it lighter than the rest
+                      was one more thing making the table look striped. */}
+                  {showIndex && <td className="px-3 py-2 text-right tabular-nums text-ink-700">{offset + i + 1}</td>}
                   {columns.map((col) => (
                     <td key={col.key} className={`px-3 py-2 ${alignClass(col.align)} ${col.cellClassName ?? ''}`}>
                       {col.render(row)}

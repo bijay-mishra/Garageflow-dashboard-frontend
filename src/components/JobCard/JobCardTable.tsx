@@ -37,13 +37,13 @@ export default function JobCardTable({
         sortValue: (j) => j.id,
         // One line per cell. The complaint is still on the card itself — it is
         // usually a paragraph, and truncating it to 200px told you little.
-        render: (j) => <span className="font-semibold text-ink-900">{j.id}</span>,
+        render: (j) => <span className="text-ink-700">{j.id}</span>,
       },
       {
         key: 'vehicleLabel',
         header: 'Vehicle',
         sortValue: (j) => j.vehicleLabel,
-        render: (j) => <span className="text-ink-800">{j.vehicleLabel}</span>,
+        render: (j) => <span className="text-ink-700">{j.vehicleLabel}</span>,
       },
       {
         key: 'mechanic',
@@ -69,14 +69,14 @@ export default function JobCardTable({
         key: 'promisedAt',
         header: 'Promised',
         sortValue: (j) => j.promisedAt,
-        render: (j) => <span className="text-ink-500">{date(j.promisedAt)}</span>,
+        render: (j) => <span className="text-ink-700">{date(j.promisedAt)}</span>,
       },
       {
         key: 'total',
         header: 'Total',
         align: 'right',
         sortValue: (j) => j.total,
-        render: (j) => <span className="font-semibold text-ink-900">{amount(j.total)}</span>,
+        render: (j) => <span className="text-ink-700">{amount(j.total)}</span>,
       },
       {
         key: 'actions',

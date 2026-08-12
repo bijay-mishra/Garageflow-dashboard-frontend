@@ -44,7 +44,7 @@ export default function InvoiceTable({
         key: 'id',
         header: 'Invoice',
         sortValue: (i) => i.id,
-        render: (i) => <span className="font-semibold text-ink-900">{i.id}</span>,
+        render: (i) => <span className="text-ink-700">{i.id}</span>,
       },
       {
         key: 'customerName',
@@ -56,14 +56,14 @@ export default function InvoiceTable({
         key: 'issuedAt',
         header: 'Date',
         sortValue: (i) => i.issuedAt,
-        render: (i) => <span className="text-ink-500">{date(i.issuedAt)}</span>,
+        render: (i) => <span className="text-ink-700">{date(i.issuedAt)}</span>,
       },
       {
         key: 'total',
         header: 'Total',
         align: 'right',
         sortValue: (i) => i.total,
-        render: (i) => <span className="font-semibold text-ink-900">{amount(i.total)}</span>,
+        render: (i) => <span className="text-ink-700">{amount(i.total)}</span>,
       },
       {
         key: 'due',
@@ -71,7 +71,7 @@ export default function InvoiceTable({
         align: 'right',
         sortValue: (i) => i.due,
         render: (i) => (
-          <span className="font-semibold text-rose-600">{i.due > 0 ? amount(i.due) : '—'}</span>
+          <span className="text-ink-700">{i.due > 0 ? amount(i.due) : '—'}</span>
         ),
       },
       {
@@ -94,7 +94,7 @@ export default function InvoiceTable({
           i.method ? (
             <Badge tone={paymentMethodTone[i.method]}>{i.method}</Badge>
           ) : (
-            <span className="text-xs text-ink-300">Not paid</span>
+            <span className="text-xs text-ink-700">Not paid</span>
           ),
       },
       {
@@ -108,7 +108,7 @@ export default function InvoiceTable({
                 Record payment
               </button>
             ) : (
-              <span className="text-xs text-ink-400">Settled</span>
+              <span className="text-xs text-ink-700">Settled</span>
             )}
 
             {/* Opens in a new tab and prints itself — see InvoicePrint. A link

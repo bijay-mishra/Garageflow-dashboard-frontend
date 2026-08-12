@@ -56,7 +56,7 @@ export default function VehicleTable({
         // tell two otherwise identical cars apart — and the colour goes, since
         // the plate below already identifies the vehicle uniquely.
         render: (v) => (
-          <span className="font-semibold text-ink-900">
+          <span className="text-ink-700">
             {v.make} {v.model} {v.year}
           </span>
         ),
@@ -66,7 +66,7 @@ export default function VehicleTable({
         header: 'Plate',
         sortValue: (v) => v.plate,
         render: (v) => (
-          <span className="rounded-md border border-ink-200 bg-ink-50 px-2 py-1 font-mono text-xs font-semibold text-ink-700">
+          <span className="rounded-md border border-ink-200 bg-ink-50 px-2 py-1 font-mono text-xs text-ink-700">
             {v.plate}
           </span>
         ),
@@ -94,13 +94,13 @@ export default function VehicleTable({
         header: 'Odometer',
         align: 'right',
         sortValue: (v) => v.odometer,
-        render: (v) => <span className="font-semibold text-ink-700">{number(v.odometer)} km</span>,
+        render: (v) => <span className="text-ink-700">{number(v.odometer)} km</span>,
       },
       {
         key: 'lastServiceDate',
         header: 'Last service',
         sortValue: (v) => v.lastServiceDate,
-        render: (v) => <span className="text-ink-500">{date(v.lastServiceDate)}</span>,
+        render: (v) => <span className="text-ink-700">{date(v.lastServiceDate)}</span>,
       },
       {
         key: 'actions',

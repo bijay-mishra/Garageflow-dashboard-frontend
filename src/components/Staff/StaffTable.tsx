@@ -38,7 +38,7 @@ export default function StaffTable({
         key: 'name',
         header: 'Name',
         sortValue: (u) => u.name,
-        render: (u) => <span className="font-semibold text-ink-900">{u.name}</span>,
+        render: (u) => <span className="text-ink-700">{u.name}</span>,
       },
       {
         key: 'email',
@@ -67,12 +67,12 @@ export default function StaffTable({
             u.mechanicName ? (
               <span className="text-ink-700">{u.mechanicName}</span>
             ) : (
-              <span className="text-xs font-medium text-rose-600">Not set — sees no jobs</span>
+              <span className="text-xs text-ink-700">Not set — sees no jobs</span>
             )
           ) : u.role === 'Customer' ? (
-            <span className="text-ink-500">{u.customerName ?? u.customerId ?? '—'}</span>
+            <span className="text-ink-700">{u.customerName ?? u.customerId ?? '—'}</span>
           ) : (
-            <span className="text-ink-300">—</span>
+            <span className="text-ink-700">—</span>
           ),
       },
       {
@@ -81,9 +81,9 @@ export default function StaffTable({
         sortValue: (u) => u.lastLoginAt,
         render: (u) =>
           u.lastLoginAt ? (
-            <span className="text-ink-500">{date(u.lastLoginAt)}</span>
+            <span className="text-ink-700">{date(u.lastLoginAt)}</span>
           ) : (
-            <span className="text-xs text-ink-400">Never</span>
+            <span className="text-xs text-ink-700">Never</span>
           ),
       },
       {

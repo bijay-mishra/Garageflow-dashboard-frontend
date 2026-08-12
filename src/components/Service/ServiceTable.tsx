@@ -48,9 +48,9 @@ export default function ServiceTable({
         // One line. "(retired)" stays because it sits inline rather than under —
         // and a service still on the list but not on offer has to say so.
         render: (s) => (
-          <span className="font-semibold text-ink-900">
+          <span className="text-ink-700">
             {s.name}
-            {!s.isActive && <span className="ml-2 text-xs font-medium text-ink-400">(retired)</span>}
+            {!s.isActive && <span className="ml-2 text-xs text-ink-700">(retired)</span>}
           </span>
         ),
       },
@@ -66,7 +66,7 @@ export default function ServiceTable({
         // Sorting on this would order by the raw comma string, which is
         // meaningless to read, so the column is display-only.
         render: (s) => (
-          <span className={s.appliesTo.length === 0 ? 'text-ink-400' : 'text-ink-700'}>
+          <span className="text-ink-700">
             {appliesToLabel(s.appliesTo)}
           </span>
         ),
@@ -75,14 +75,14 @@ export default function ServiceTable({
         key: 'durationMinutes',
         header: 'Time',
         sortValue: (s) => s.durationMinutes,
-        render: (s) => <span className="text-ink-500">{formatDuration(s.durationMinutes)}</span>,
+        render: (s) => <span className="text-ink-700">{formatDuration(s.durationMinutes)}</span>,
       },
       {
         key: 'price',
         header: 'Price',
         align: 'right',
         sortValue: (s) => s.price,
-        render: (s) => <span className="font-bold text-ink-900">{formatAmount(s.price)}</span>,
+        render: (s) => <span className="text-ink-700">{formatAmount(s.price)}</span>,
       },
       {
         key: 'timesUsed',
@@ -90,7 +90,7 @@ export default function ServiceTable({
         align: 'right',
         sortValue: (s) => s.timesUsed,
         render: (s) => (
-          <span className={s.timesUsed === 0 ? 'text-ink-300' : 'font-semibold text-ink-700'}>
+          <span className="text-ink-700">
             {s.timesUsed}
           </span>
         ),

@@ -34,7 +34,7 @@ export default function CustomerTable({
         key: 'name',
         header: 'Customer',
         sortValue: (c) => c.name,
-        render: (c) => <span className="font-semibold text-ink-900">{c.name}</span>,
+        render: (c) => <span className="text-ink-700">{c.name}</span>,
       },
       {
         key: 'phone',
@@ -53,20 +53,20 @@ export default function CustomerTable({
         header: 'Vehicles',
         align: 'center',
         sortValue: (c) => c.vehicleCount,
-        render: (c) => <span className="font-semibold text-ink-700">{c.vehicleCount}</span>,
+        render: (c) => <span className="text-ink-700">{c.vehicleCount}</span>,
       },
       {
         key: 'totalSpent',
         header: 'Total spent',
         align: 'right',
         sortValue: (c) => c.totalSpent,
-        render: (c) => <span className="font-semibold text-ink-900">{amount(c.totalSpent)}</span>,
+        render: (c) => <span className="text-ink-700">{amount(c.totalSpent)}</span>,
       },
       {
         key: 'createdAt',
         header: 'Since',
         sortValue: (c) => c.createdAt,
-        render: (c) => <span className="text-ink-500">{date(c.createdAt)}</span>,
+        render: (c) => <span className="text-ink-700">{date(c.createdAt)}</span>,
       },
       {
         key: 'actions',

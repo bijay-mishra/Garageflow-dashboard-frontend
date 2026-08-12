@@ -42,9 +42,9 @@ export default function DeliveryTable({
         // stacking them put a grey second line under every row on every table
         // in this product, which is what the single-line rule removed.
         render: (d) => (
-          <span className="font-semibold text-ink-900">
+          <span className="text-ink-700">
             {d.vehiclePlate}
-            <span className="ml-2 font-normal text-ink-400">{d.vehicleLabel}</span>
+            <span className="ml-2 text-ink-700">{d.vehicleLabel}</span>
           </span>
         ),
       },
@@ -62,7 +62,7 @@ export default function DeliveryTable({
           <span className="text-ink-600">
             {methodLabel[d.method]}
             {d.method === 'HomeDelivery' && d.distanceKm != null && (
-              <span className="ml-2 text-xs text-ink-400">{d.distanceKm.toFixed(1)} km</span>
+              <span className="ml-2 text-xs text-ink-700">{d.distanceKm.toFixed(1)} km</span>
             )}
           </span>
         ),
@@ -74,11 +74,11 @@ export default function DeliveryTable({
         sortValue: (d) => d.fee,
         render: (d) =>
           d.method === 'Pickup' ? (
-            <span className="text-ink-300">—</span>
+            <span className="text-ink-700">—</span>
           ) : d.fee === 0 ? (
-            <span className="text-xs font-semibold text-emerald-600">Free</span>
+            <span className="text-xs text-ink-700">Free</span>
           ) : (
-            <span className="font-semibold text-ink-900">{formatAmount(d.fee)}</span>
+            <span className="text-ink-700">{formatAmount(d.fee)}</span>
           ),
       },
       {
@@ -89,7 +89,7 @@ export default function DeliveryTable({
           d.driver ? (
             <span className="text-ink-700">{d.driver}</span>
           ) : (
-            <span className="text-ink-300">—</span>
+            <span className="text-ink-700">—</span>
           ),
       },
       {
