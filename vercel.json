@@ -1,8 +1,9 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://202.51.3.68:8013/:path*"
+      "destination": "https://app.bijayamishra.com.np/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
