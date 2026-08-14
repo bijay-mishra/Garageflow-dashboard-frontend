@@ -1,9 +1,13 @@
-import { BuildingOffice2Icon, UsersIcon, WrenchScrewdriverIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { BuildingOffice2Icon, DevicePhoneMobileIcon, UsersIcon, WrenchScrewdriverIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
 import Badge from '@/components/common/Badge'
 import { ErrorBlock, LoadingBlock } from '@/components/common/loaders/States'
 import { ConsoleHeader } from '@/components/SuperAdmin/SuperAdminLayout'
-import { useGetCompanies, useGetImpersonations } from '@/components/SuperAdmin/superadmin-query'
+import {
+  useGetAppCustomers,
+  useGetCompanies,
+  useGetImpersonations,
+} from '@/components/SuperAdmin/superadmin-query'
 import { formatDate } from '@/lib/format'
 
 /**
@@ -15,6 +19,7 @@ import { formatDate } from '@/lib/format'
 export default function Overview() {
   const { data: companies = [], isLoading, isError } = useGetCompanies()
   const { data: audit = [] } = useGetImpersonations()
+  const { data: app } = useGetAppCustomers()
 
   if (isLoading) return <LoadingBlock label="Loading platform…" />
   if (isError) return <ErrorBlock />
@@ -30,10 +35,20 @@ export default function Overview() {
       <ConsoleHeader title="Overview" subtitle="Every company on the platform" />
 
       <div className="space-y-6 p-5 lg:p-8">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Tile label="Companies" value={companies.length} icon={BuildingOffice2Icon} />
           <Tile label="Staff accounts" value={total((c) => c.userCount)} icon={UsersIcon} />
-          <Tile label="Customers" value={total((c) => c.customerCount)} icon={UsersIcon} />
+          {/* "On file" rather than "Customers": this is every walk-in a workshop
+              ever wrote down, which is a much larger and quite different number
+              from the app tile beside it. Naming both "customers" invited the
+              reasonable assumption that one was a subset of the other. */}
+          <Tile label="Customers on file" value={total((c) => c.customerCount)} icon={UsersIcon} />
+          <Tile
+            label="App customers"
+            value={app?.total ?? 0}
+            icon={DevicePhoneMobileIcon}
+            to="/superadmin/app-customers"
+          />
           <Tile label="Job cards" value={total((c) => c.jobCount)} icon={WrenchScrewdriverIcon} />
         </div>
 
@@ -136,18 +151,29 @@ function Tile({
   label,
   value,
   icon: Icon,
+  to,
 }: {
   label: string
   value: number
   icon: typeof UsersIcon
+  /** Makes the tile a link to the screen that breaks this number down. */
+  to?: string
 }) {
-  return (
-    <div className="card p-5">
+  const body = (
+    <>
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-ink-400" />
         <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{label}</p>
       </div>
-      <p className="mt-2 text-2xl font-bold text-ink-900">{value}</p>
-    </div>
+      <p className="mt-2 text-2xl font-bold tabular-nums text-ink-900">{value.toLocaleString()}</p>
+    </>
+  )
+
+  return to ? (
+    <Link to={to} className="card card-hover block p-5">
+      {body}
+    </Link>
+  ) : (
+    <div className="card p-5">{body}</div>
   )
 }

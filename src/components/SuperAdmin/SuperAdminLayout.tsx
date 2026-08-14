@@ -9,6 +9,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
+  DevicePhoneMobileIcon,
   MoonIcon,
   ShieldCheckIcon,
   Squares2X2Icon,
@@ -50,6 +51,7 @@ export default function SuperAdminLayout() {
   const nav = [
     { to: '/superadmin/overview', label: 'Overview', icon: Squares2X2Icon },
     { to: '/superadmin/companies', label: 'Companies', icon: BuildingOffice2Icon },
+    { to: '/superadmin/app-customers', label: 'App customers', icon: DevicePhoneMobileIcon },
     { to: '/superadmin/support', label: 'Support', icon: ChatBubbleLeftRightIcon },
     { to: '/superadmin/configuration', label: 'Configuration', icon: Cog6ToothIcon },
     { to: '/superadmin/audit', label: 'Access log', icon: ClipboardDocumentListIcon },

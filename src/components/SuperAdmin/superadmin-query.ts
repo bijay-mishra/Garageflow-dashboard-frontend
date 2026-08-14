@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { initApiRequest } from '@/lib/api-request'
 import { RequestBodyType, RequestMethod } from '@/lib/api-types'
 import {
@@ -25,6 +25,16 @@ export const superAdminApi = {
   modules: {
     actionName: 'SA_MODULES',
     controllerName: '/superadmin/modules',
+    requestMethod: RequestMethod.GET,
+  },
+  appCustomers: {
+    actionName: 'SA_APP_CUSTOMERS',
+    controllerName: '/superadmin/app-customers',
+    requestMethod: RequestMethod.GET,
+  },
+  appCustomerList: {
+    actionName: 'SA_APP_CUSTOMER_LIST',
+    controllerName: '/superadmin/app-customers/list',
     requestMethod: RequestMethod.GET,
   },
   createCompany: {
@@ -153,6 +163,90 @@ export const useGetCompanies = (enabled = true) =>
     queryFn: () => initApiRequest<ICompany[]>({ apiDetails: superAdminApi.companies }),
     enabled,
     select: (res) => res?.data?.data ?? [],
+  })
+
+/** One month of sign-ups. `label` is a short month name. */
+export interface IAppSignupPoint {
+  label: string
+  count: number
+}
+
+/** How many app customers one company has. */
+export interface ICompanyAppCustomers {
+  companyCode: string
+  name: string
+  registered: number
+  activeLast30Days: number
+}
+
+/**
+ * Mobile app adoption across every company.
+ *
+ * Counts `Users` with the Customer role — the row every sign-up route creates,
+ * and the one the app's own endpoints authorise against. Deliberately not the
+ * `customerCount` on ICompany: that is the workshop's own book of walk-ins, most
+ * of whom have never installed anything.
+ *
+ * There is no download figure and there cannot be one. The store knows who
+ * installed the app; the server only ever hears from those who registered. As
+ * nothing in the app works signed-out, registrations are the real user base.
+ */
+export interface IAppCustomerStats {
+  total: number
+  activeLast7Days: number
+  activeLast30Days: number
+  newThisWeek: number
+  newThisMonth: number
+  newLast30Days: number
+  newPrevious30Days: number
+  /** Last 30 days against the 30 before them, as a signed percentage. */
+  growthPct: number
+  /** Workshop-created accounts nobody has ever signed into. */
+  neverOpened: number
+  notJoinedAnyGarage: number
+  pendingDeletion: number
+  signupTrend: IAppSignupPoint[]
+  byCompany: ICompanyAppCustomers[]
+}
+
+export const useGetAppCustomers = (enabled = true) =>
+  useQuery({
+    queryKey: [superAdminApi.appCustomers.actionName],
+    queryFn: () => initApiRequest<IAppCustomerStats>({ apiDetails: superAdminApi.appCustomers }),
+    enabled,
+    select: (res) => res?.data?.data ?? null,
+  })
+
+/** One registered app customer, as the console lists them. */
+export interface IAppCustomerRow {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  registeredAt: string
+  lastLoginAt: string | null
+  /** Every garage they have joined — more than one is normal. */
+  companies: string[]
+  neverOpened: boolean
+}
+
+/**
+ * The registered app customers themselves, server-paged.
+ *
+ * `keepPreviousData` holds the current page on screen while the next one loads,
+ * instead of flashing an empty table.
+ */
+export const useGetAppCustomerList = (params: IPaginationParams, enabled = true) =>
+  useQuery({
+    queryKey: [superAdminApi.appCustomerList.actionName, params],
+    queryFn: () =>
+      initApiRequest<PaginatedResponse<IAppCustomerRow>>({
+        apiDetails: superAdminApi.appCustomerList,
+        params: { ...params },
+      }),
+    enabled,
+    placeholderData: keepPreviousData,
+    select: (res) => res?.data?.data ?? { count: 0, list: [] },
   })
 
 /** The module names the server recognises. Never hardcoded here — an unknown

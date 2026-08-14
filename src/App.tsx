@@ -28,6 +28,7 @@ import SuperAdminRoute from '@/components/SuperAdmin/SuperAdminRoute'
 import SuperAdminOverview from '@/pages/superadmin/Overview'
 import SuperAdminCompanies from '@/pages/superadmin/Companies'
 import SuperAdminCompanyDetail from '@/pages/superadmin/CompanyDetail'
+import SuperAdminAppCustomers from '@/pages/superadmin/AppCustomers'
 import SuperAdminConfiguration from '@/pages/superadmin/Configuration'
 import SuperAdminSupport from '@/pages/superadmin/Support'
 import SuperAdminAudit from '@/pages/superadmin/AuditLog'
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="overview" element={<SuperAdminOverview />} />
         <Route path="companies" element={<SuperAdminCompanies />} />
         <Route path="companies/:code" element={<SuperAdminCompanyDetail />} />
+        <Route path="app-customers" element={<SuperAdminAppCustomers />} />
         <Route path="support" element={<SuperAdminSupport />} />
         <Route path="configuration" element={<SuperAdminConfiguration />} />
         <Route path="audit" element={<SuperAdminAudit />} />
