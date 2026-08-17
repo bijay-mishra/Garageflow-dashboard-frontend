@@ -7,6 +7,7 @@ import { RequestMethod } from '@/lib/api-types'
 import { useAuth } from '@/context/AuthContext'
 import type { StoredUser } from '@/lib/authStorage'
 import { Spinner } from '@/components/common/loaders/States'
+import PasswordToggle from '@/components/common/form/PasswordToggle'
 
 /**
  * The operator's way in, at /superadmin.
@@ -27,6 +28,7 @@ export default function SuperAdminLogin() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -131,14 +133,20 @@ export default function SuperAdminLogin() {
             <label htmlFor="sa-password" className="mb-1.5 block text-xs font-semibold text-ink-600">
               Password
             </label>
-            <input
-              id="sa-password"
-              type="password"
-              className="input"
-              value={password}
-              autoComplete="current-password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                id="sa-password"
+                type={showPassword ? 'text' : 'password'}
+                className="input pr-11"
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <PasswordToggle
+                shown={showPassword}
+                onToggle={() => setShowPassword((s) => !s)}
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn-primary w-full" disabled={busy}>

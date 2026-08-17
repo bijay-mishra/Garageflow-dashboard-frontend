@@ -10,6 +10,7 @@ import {
   WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline'
 import { Spinner } from '@/components/common/loaders/States'
+import PasswordToggle from '@/components/common/form/PasswordToggle'
 import {
   useForgotPassword,
   useResetPassword,
@@ -420,6 +421,9 @@ function Field({
   className = '',
   autoComplete,
 }: FieldProps) {
+  const [shown, setShown] = useState(false)
+  const isPassword = type === 'password'
+
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold text-ink-600">{label}</span>
@@ -429,14 +433,15 @@ function Field({
         </span>
         <input
           name={name}
-          type={type}
-          className={`input pl-10 ${className}`}
+          type={isPassword && shown ? 'text' : type}
+          className={`input pl-10 ${isPassword ? 'pr-11' : ''} ${className}`}
           autoComplete={autoComplete}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
           onBlur={onBlur}
         />
+        {isPassword && <PasswordToggle shown={shown} onToggle={() => setShown((s) => !s)} />}
       </div>
       {error && <p className="mt-1 text-xs font-medium text-rose-600">{error}</p>}
     </label>

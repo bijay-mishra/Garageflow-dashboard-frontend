@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import clsx from 'clsx'
 import type { FormikProps } from 'formik'
+import PasswordToggle from './PasswordToggle'
 
 type InputType = 'text' | 'number' | 'date' | 'email' | 'password' | 'tel' | 'time'
 
@@ -51,6 +53,13 @@ export default function Input({
   const error = formik.errors[name] as string | undefined
   const showError = Boolean(error) && (Boolean(formik.touched[name]) || formik.submitCount > 0)
 
+  // Every password field in the app gets the eye for free, which is the point
+  // of putting it here: the alternative was each form remembering to ask.
+  // Held per field rather than per form — revealing the new password while
+  // confirming it against a hidden one is exactly the check being made.
+  const [shown, setShown] = useState(false)
+  const isPassword = type === 'password'
+
   if (isView) {
     return (
       <div className={className}>
@@ -69,20 +78,30 @@ export default function Input({
         </label>
       )}
 
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={fieldValue}
-        onChange={onChange ?? formik.handleChange}
-        onBlur={formik.handleBlur}
-        placeholder={placeholder}
-        disabled={disabled}
-        min={min}
-        max={max}
-        step={step}
-        className={clsx('input', showError && 'border-rose-300 focus:border-rose-400 focus:ring-rose-100')}
-      />
+      <div className="relative">
+        <input
+          id={name}
+          name={name}
+          type={isPassword && shown ? 'text' : type}
+          value={fieldValue}
+          onChange={onChange ?? formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={placeholder}
+          disabled={disabled}
+          min={min}
+          max={max}
+          step={step}
+          className={clsx(
+            'input',
+            // Room for the eye, so a long password stops before it rather than
+            // scrolling underneath.
+            isPassword && 'pr-11',
+            showError && 'border-rose-300 focus:border-rose-400 focus:ring-rose-100',
+          )}
+        />
+
+        {isPassword && <PasswordToggle shown={shown} onToggle={() => setShown((s) => !s)} />}
+      </div>
 
       {showError && <p className="mt-1 text-xs font-medium text-rose-600">{error}</p>}
     </div>
