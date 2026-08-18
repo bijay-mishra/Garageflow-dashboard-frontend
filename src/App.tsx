@@ -11,6 +11,7 @@ import Customers from '@/pages/Customers'
 import Vehicles from '@/pages/Vehicles'
 import JobCards from '@/pages/JobCards'
 import Services from '@/pages/Services'
+import Bookings from '@/pages/Bookings'
 import ServiceHistory from '@/pages/ServiceHistory'
 import Billing from '@/pages/Billing'
 import Deliveries from '@/pages/Deliveries'
@@ -106,6 +107,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="customers" element={<Customers />} />
         <Route path="vehicles" element={<Vehicles />} />
+        <Route path="bookings" element={<Bookings />} />
         <Route path="job-cards" element={<JobCards />} />
         <Route path="account" element={<Account />} />
         <Route path="workshop" element={<WorkshopSettings />} />

@@ -1,6 +1,7 @@
 import {
   AdjustmentsHorizontalIcon,
   BanknotesIcon,
+  CalendarDaysIcon,
   BuildingStorefrontIcon,
   ChatBubbleLeftRightIcon,
   ChartBarIcon,
@@ -32,6 +33,7 @@ const ICONS: Record<string, IconComponent> = {
   home: HomeIcon,
   users: UsersIcon,
   truck: TruckIcon,
+  calendar: CalendarDaysIcon,
   clipboard: ClipboardDocumentListIcon,
   sparkles: SparklesIcon,
   wrench: WrenchScrewdriverIcon,
