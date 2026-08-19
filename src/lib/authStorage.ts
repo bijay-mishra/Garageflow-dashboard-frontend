@@ -22,6 +22,19 @@ const USER_KEY = 'gf_auth'
  */
 const MUST_SET_PASSWORD_KEY = 'gf_must_set_password'
 
+/**
+ * Which API issued the session currently in storage.
+ *
+ * A token is only meaningful to the server that signed it. Point the dashboard
+ * at a different API — a developer switching between localhost and the live
+ * server, or a deployment moving host — and the stored session becomes a
+ * credential the new server has never heard of. It is not expired, so nothing
+ * treats it as stale; it simply fails, and it does so on whatever request the
+ * app happens to make first. That reads as "the app calls /workshop before I
+ * log in and gets a 401", which is a confusing description of a stale login.
+ */
+const API_BASE_KEY = 'gf_api_base'
+
 /** The signed-in user as the API returns it from `/auth/login`. */
 export interface StoredUser {
   id: string
@@ -106,6 +119,33 @@ export function clearSession(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
   localStorage.removeItem(MUST_SET_PASSWORD_KEY)
+}
+
+/**
+ * Drops the session if it was issued by a different API than the one now
+ * configured, and records the current one.
+ *
+ * Called once at startup, before anything reads a token. Dropping the session
+ * is the honest outcome: there is no way to make the old server's token work
+ * against the new one, and the alternative is a signed-in-looking app where
+ * every request fails until the refresh gives up too.
+ */
+export function clearSessionIfApiChanged(apiBase: string): void {
+  if (!canUseStorage()) return
+
+  const previous = localStorage.getItem(API_BASE_KEY)
+
+  // First run on this browser. Nothing to compare against, and clearing here
+  // would sign out everybody once on the release that adds this.
+  if (previous === null) {
+    localStorage.setItem(API_BASE_KEY, apiBase)
+    return
+  }
+
+  if (previous === apiBase) return
+
+  clearSession()
+  localStorage.setItem(API_BASE_KEY, apiBase)
 }
 
 // ── Impersonation ────────────────────────────────────────────────────────────

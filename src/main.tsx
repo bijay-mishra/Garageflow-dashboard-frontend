@@ -13,13 +13,19 @@ import { AuthProvider } from '@/context/AuthContext'
 import { ModuleProvider } from '@/context/ModuleContext'
 import { MenuProvider } from '@/context/MenuContext'
 import { WorkspaceProvider } from '@/context/WorkspaceContext'
-import { loadRuntimeConfig } from '@/lib/runtimeConfig'
+import { apiBase, loadRuntimeConfig } from '@/lib/runtimeConfig'
+import { clearSessionIfApiChanged } from '@/lib/authStorage'
 import './index.css'
 
 // public/config.json is fetched before the first render, so the API base URL is
 // resolved by the time any query fires. Kept inside a function rather than a
 // top-level await, which esbuild cannot emit for the browser build target.
 loadRuntimeConfig().finally(() => {
+  // After the config resolves and before React mounts, so AuthContext's very
+  // first read already reflects it. A token issued by a different API is
+  // dropped here rather than left to fail on whichever request happens first.
+  clearSessionIfApiChanged(apiBase())
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
