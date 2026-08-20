@@ -1,14 +1,17 @@
 import { useMemo } from 'react'
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { Link } from 'react-router-dom'
+import { ArrowTopRightOnSquareIcon, BoltIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 import DataTable, { type Column, type ServerTableProps } from '@/components/common/table/DataTable'
 import Badge from '@/components/common/Badge'
 import { useDateFormat } from '@/hooks/useDateFormat'
-import { statusLabel, statusTone, type IBooking } from './booking-schema'
+import { queueBadge, statusLabel, statusTone, type IBooking } from './booking-schema'
 
 interface BookingTableProps extends ServerTableProps {
   data: IBooking[]
   onConfirm: (booking: IBooking) => void
   onDecline: (booking: IBooking) => void
+  /** Confirmed but never turned into work — the row's Assign button. */
+  onAssign: (booking: IBooking) => void
   busyId?: string | null
 }
 
@@ -22,6 +25,7 @@ export default function BookingTable({
   data,
   onConfirm,
   onDecline,
+  onAssign,
   busyId,
   total,
   state,
@@ -32,6 +36,38 @@ export default function BookingTable({
 
   const columns = useMemo<Column<IBooking>[]>(
     () => [
+      {
+        key: 'queuePosition',
+        header: 'Queue',
+        // Not sortable. The server ranks the whole waiting set — urgent first,
+        // then oldest — and sorting this column by its own value would either
+        // reproduce that order or contradict it.
+        render: (b) => {
+          const queue = queueBadge(b)
+
+          if (!queue) return <span className="text-xs text-ink-400">—</span>
+
+          return (
+            <span className="flex items-center gap-2">
+              <Badge tone={queue.tone}>
+                {b.isUrgent && <BoltIcon className="h-3 w-3" />}
+                {queue.label}
+              </Badge>
+
+              {/* The fee, not just the word. It is a line the customer will see
+                  on their bill, and an advisor explaining why this car went
+                  first should not have to look the number up. */}
+              {b.isUrgent && b.urgentFee > 0 ? (
+                <span className="text-xs font-semibold text-violet-700">
+                  {amount(b.urgentFee)}
+                </span>
+              ) : (
+                queue.hint && <span className="text-xs text-ink-400">{queue.hint}</span>
+              )}
+            </span>
+          )
+        },
+      },
       {
         key: 'customerName',
         header: 'Customer',
@@ -111,8 +147,25 @@ export default function BookingTable({
         render: (b) => (
           <span className="flex items-center gap-2">
             <Badge tone={statusTone[b.status]}>{statusLabel[b.status]}</Badge>
+
+            {/* Where the booking ended up, and a way to get there. Reading the
+                job number off this row and then searching for it by hand was
+                the last step of this screen with no link on it. */}
             {b.status === 'Converted' && b.jobCardId && (
-              <span className="text-xs text-ink-700">{b.jobCardId}</span>
+              <Link
+                to={`/job-cards?q=${encodeURIComponent(b.jobCardId)}`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"
+              >
+                {b.jobCardId}
+                <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+              </Link>
+            )}
+
+            {/* A confirmed booking with no job card is the gap this page exists
+                to close: somebody was promised a day and nobody here is working
+                on it. Saying so plainly is the point. */}
+            {b.status === 'Confirmed' && !b.jobCardId && (
+              <span className="text-xs font-semibold text-accent-700">Not assigned</span>
             )}
           </span>
         ),
@@ -122,41 +175,57 @@ export default function BookingTable({
         header: 'Actions',
         align: 'right',
         render: (b) => {
-          if (b.status !== 'Requested') {
+          if (b.status === 'Requested') {
             return (
-              <span
-                className="block max-w-[14rem] truncate text-right text-xs text-ink-700"
-                title={b.staffNote ?? ''}
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  className="btn-ghost text-xs"
+                  onClick={() => onDecline(b)}
+                  disabled={busyId === b.id}
+                >
+                  Decline
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary text-xs"
+                  onClick={() => onConfirm(b)}
+                  disabled={busyId === b.id}
+                >
+                  Confirm
+                </button>
+              </div>
+            )
+          }
+
+          // Confirmed and still unassigned. Before this there was no way back:
+          // confirming was the only route to a job card, so a booking answered
+          // yesterday could never be turned into one from this screen.
+          if (b.status === 'Confirmed' && !b.jobCardId) {
+            return (
+              <button
+                type="button"
+                className="btn-primary text-xs"
+                onClick={() => onAssign(b)}
+                disabled={busyId === b.id}
               >
-                {b.staffNote || '—'}
-              </span>
+                Assign
+              </button>
             )
           }
 
           return (
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                className="btn-ghost text-xs"
-                onClick={() => onDecline(b)}
-                disabled={busyId === b.id}
-              >
-                Decline
-              </button>
-              <button
-                type="button"
-                className="btn-primary text-xs"
-                onClick={() => onConfirm(b)}
-                disabled={busyId === b.id}
-              >
-                Confirm
-              </button>
-            </div>
+            <span
+              className="block max-w-[14rem] truncate text-right text-xs text-ink-700"
+              title={b.staffNote ?? ''}
+            >
+              {b.staffNote || '—'}
+            </span>
           )
         },
       },
     ],
-    [busyId, onConfirm, onDecline, date, amount],
+    [busyId, onConfirm, onDecline, onAssign, date, amount],
   )
 
   return (

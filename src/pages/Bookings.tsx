@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { BoltIcon } from '@heroicons/react/24/outline'
 import StickyHeader from '@/components/common/headers/StickyHeader'
 import TableFilterBar from '@/components/common/table/TableFilterBar'
 import Dropdown from '@/components/common/form/Dropdown'
@@ -32,9 +34,11 @@ import { useTableState } from '@/hooks/useTableState'
  *
  * Requested first, always. A booking that has been answered is a record; one
  * that has not is a customer waiting, and the second is the only reason to open
- * this page — which is what the count in the header is.
+ * this page — which is what the counts in the header are.
  */
 export default function Bookings() {
+  const navigate = useNavigate()
+
   const [query, setQuery] = useSearchQuery()
   const search = useDebouncedValue(query)
   const [status, setStatus] = useState<BookingStatus | typeof ALL>('All')
@@ -56,6 +60,15 @@ export default function Bookings() {
   const rows = data?.list ?? []
   const waiting = rows.filter((b) => b.status === 'Requested').length
 
+  // Counted over the page rather than the whole queue, like the one beside it.
+  // Both are a nudge to look down, not a report.
+  const urgent = rows.filter((b) => b.isUrgent && b.queuePosition != null).length
+
+  // Confirmed, promised, and nobody working on it. The failure this page was
+  // built to make visible, so it gets its own count rather than being something
+  // you notice by scrolling.
+  const unassigned = rows.filter((b) => b.status === 'Confirmed' && !b.jobCardId).length
+
   const busy = respond.isPending || convert.isPending
   const busyId = respond.isPending
     ? respond.variables?.id
@@ -64,25 +77,44 @@ export default function Bookings() {
       : null
 
   /**
+   * Opens the job card that was just created.
+   *
+   * The last thing an advisor wants after assigning work is to be left on the
+   * list they were already looking at — the job is the thing that now needs a
+   * promised date and parts on it.
+   */
+  const openJobCard = (jobCardId?: string) => {
+    setConfirming(null)
+    navigate(jobCardId ? `/job-cards?q=${encodeURIComponent(jobCardId)}` : '/job-cards')
+  }
+
+  /**
    * Confirm and create the job card, in that order.
    *
    * Chained rather than fired together: `convert` refuses a booking that is not
    * yet Confirmed, so running them in parallel would race and lose the job card
    * about half the time.
+   *
+   * A booking that was already confirmed skips the first step. Answering it
+   * again would be rejected by the server — the status is not Requested any
+   * more — and would notify the customer a second time about a date they were
+   * told days ago.
    */
   const confirmBooking = (mechanic?: string) => {
     if (!confirming) return
 
-    respond.mutate(
-      { id: confirming.id, status: 'Confirmed' },
-      {
-        onSuccess: () =>
-          convert.mutate(
-            { id: confirming.id, mechanic },
-            { onSuccess: () => setConfirming(null) },
-          ),
-      },
-    )
+    const createJobCard = () =>
+      convert.mutate(
+        { id: confirming.id, mechanic },
+        { onSuccess: (res) => openJobCard(res?.data?.data?.id) },
+      )
+
+    if (confirming.status === 'Confirmed') {
+      createJobCard()
+      return
+    }
+
+    respond.mutate({ id: confirming.id, status: 'Confirmed' }, { onSuccess: createJobCard })
   }
 
   const declineBooking = () => {
@@ -99,11 +131,18 @@ export default function Bookings() {
   return (
     <div className="space-y-6">
       <StickyHeader title="Bookings" subtitle="Service requests from the customer app">
+        {urgent > 0 && (
+          <Badge tone="violet">
+            <BoltIcon className="h-3 w-3" />
+            {urgent} urgent
+          </Badge>
+        )}
         {waiting > 0 && (
           <Badge tone="amber" dot>
             {waiting} waiting on you
           </Badge>
         )}
+        {unassigned > 0 && <Badge tone="gray">{unassigned} not assigned</Badge>}
       </StickyHeader>
 
       <div className="card overflow-hidden">
@@ -133,6 +172,7 @@ export default function Bookings() {
           loading={isFetching}
           busyId={busyId}
           onConfirm={setConfirming}
+          onAssign={setConfirming}
           onDecline={(b) => {
             setNote('')
             setDeclining(b)

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BoltIcon } from '@heroicons/react/24/outline'
 import Dropdown from '@/components/common/form/Dropdown'
 import Badge from '@/components/common/Badge'
 import { useDateFormat } from '@/hooks/useDateFormat'
@@ -9,7 +10,7 @@ interface BookingConfirmModalProps {
   booking: IBooking
   busy: boolean
   onClose: () => void
-  /** Confirms, then creates the job card. `mechanic` is optional. */
+  /** Confirms if it needs confirming, then creates the job card. */
   onConfirm: (mechanic?: string) => void
 }
 
@@ -27,6 +28,11 @@ interface BookingConfirmModalProps {
  * screens. A confirmed booking that never became a job is a promise nobody is
  * working on, and that gap is the whole reason the workshop missed these in the
  * first place.
+ *
+ * The same dialog does both jobs. A booking that was confirmed yesterday needs
+ * only the mechanic, so the wording changes and the answer step is skipped —
+ * but it is the same read of the same booking, and a second dialog would differ
+ * only in the bug one of them was missing.
  */
 export default function BookingConfirmModal({
   booking,
@@ -42,17 +48,50 @@ export default function BookingConfirmModal({
   // picking one at random to get past the dialog.
   const [mechanic, setMechanic] = useState<string | null>(null)
 
+  const alreadyConfirmed = booking.status === 'Confirmed'
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4">
       <div className="w-full max-w-lg rounded-lg border border-ink-100 bg-white shadow-lg">
         <div className="border-b border-ink-100 px-5 py-4">
-          <p className="text-sm font-semibold text-ink-800">Confirm this booking</p>
-          <p className="mt-0.5 text-xs text-ink-500">
-            {booking.customerName} is told straight away, and a job card is created.
-          </p>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-ink-800">
+                {alreadyConfirmed ? 'Put this on a job card' : 'Confirm this booking'}
+              </p>
+              <p className="mt-0.5 text-xs text-ink-500">
+                {alreadyConfirmed
+                  ? `${booking.customerName} was already told this is going ahead — this opens the work.`
+                  : `${booking.customerName} is told straight away, and a job card is created.`}
+              </p>
+            </div>
+
+            {booking.isUrgent && (
+              <Badge tone="violet">
+                <BoltIcon className="h-3 w-3" />
+                Urgent
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3 px-5 py-4">
+          {/* What the priority fee actually buys, said out loud. An advisor
+              taking this out of turn is doing so because the customer paid, and
+              the amount is a line that will appear on their bill. */}
+          {booking.isUrgent && booking.urgentFee > 0 && (
+            <div className="rounded-md bg-violet-50 px-3 py-2.5 text-xs leading-relaxed text-violet-800">
+              Paid to skip the queue. {amount(booking.urgentFee)} is added to the job card as
+              &ldquo;Priority booking fee&rdquo; when you create it — it has not been charged yet.
+            </div>
+          )}
+
+          {booking.queuePosition != null && !booking.isUrgent && (
+            <div className="rounded-md bg-ink-50 px-3 py-2.5 text-xs text-ink-600">
+              Number {booking.queuePosition} of {booking.queueTotal} waiting.
+            </div>
+          )}
+
           <Row label="Customer">
             <span className="text-ink-800">{booking.customerName}</span>
             {booking.customerPhone && (
@@ -124,7 +163,7 @@ export default function BookingConfirmModal({
             onClick={() => onConfirm(mechanic ?? undefined)}
             disabled={busy}
           >
-            {busy ? 'Working…' : 'Confirm & create job card'}
+            {busy ? 'Working…' : alreadyConfirmed ? 'Create job card' : 'Confirm & create job card'}
           </button>
         </div>
       </div>

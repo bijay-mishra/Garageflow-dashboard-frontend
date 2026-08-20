@@ -99,7 +99,7 @@ export default function RoleForm({
             aria-label="Close"
             className="-mr-1 shrink-0 rounded-md p-1 text-ink-400 transition hover:bg-ink-100 hover:text-ink-700"
           >
-            <XMarkIcon className="h-4.5 w-4.5" />
+            <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
 

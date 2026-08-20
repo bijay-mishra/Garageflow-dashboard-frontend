@@ -35,6 +35,18 @@ export interface BookingListParams extends IPaginationParams {
 }
 
 /**
+ * The job card conversion just created.
+ *
+ * Only the id, because that is all the caller does with it — the page sends the
+ * advisor straight there rather than leaving them to find the number by hand.
+ * Typing the whole JobCardDto here would be a second copy of it to keep in step
+ * for no gain.
+ */
+export interface ConvertedJobCard {
+  id: string
+}
+
+/**
  * The company's bookings, newest first.
  *
  * Scoping is the server's: staff get the whole company and a customer gets only
@@ -116,7 +128,7 @@ export const useConvertBooking = () => {
   return useMutation({
     mutationKey: [bookingApi.convertBooking.actionName],
     mutationFn: ({ id, mechanic }: { id: string; mechanic?: string }) =>
-      initApiRequest({
+      initApiRequest<ConvertedJobCard>({
         apiDetails: bookingApi.convertBooking,
         pathVariables: { id },
         params: mechanic ? { mechanic } : undefined,

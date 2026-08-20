@@ -73,6 +73,7 @@ export default function Support() {
                     {conversation.thread.subject}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-400">
+                    {conversation.thread.audience === 'staff' ? 'Mechanic' : 'Customer'} ·{' '}
                     {conversation.thread.openedBy} ·{' '}
                     {conversation.thread.messageCount} message
                     {conversation.thread.messageCount === 1 ? '' : 's'}
@@ -132,6 +133,20 @@ function ThreadRow({
         >
           {thread.openedBy || 'Customer'}
         </p>
+        {/* Which queue this row is from. Mechanics and customers land in one
+            inbox on purpose — whoever is staffing it is watching one list — but
+            "the Corolla is in bay 3" and "when is my car ready" need answering
+            differently, and the names alone do not say which is which. */}
+        <span
+          className={clsx(
+            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+            thread.audience === 'staff'
+              ? 'bg-violet-50 text-violet-700'
+              : 'bg-brand-50 text-brand-700',
+          )}
+        >
+          {thread.audience === 'staff' ? 'Mechanic' : 'Customer'}
+        </span>
         {thread.needsAttention && (
           <span className="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
         )}
