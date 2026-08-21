@@ -16,8 +16,25 @@ interface FormikDropdownProps {
   disabled?: boolean
   isView?: boolean
   className?: string
-  /** Fires after the field is set — for cascading selects. */
-  onSelect?: (value: string | number | null, option: Option | null) => void
+  /**
+   * Other fields this choice decides — for cascading selects.
+   *
+   * Returns a patch rather than writing them itself, and that is the whole
+   * point of the signature. Formik's `setFieldValue` validates against
+   * `state.values` as it stood at the last render, so two of them fired from
+   * one handler both validate against the *original* values: the second call
+   * re-runs the schema on a form where this dropdown is still empty, and
+   * writes "…is required" back over the error the first call had just
+   * cleared. The field is set, the red text stays, and nothing shifts it until
+   * some other field is touched.
+   *
+   * Returning the patch lets both changes go in through a single `setValues`,
+   * which validates the finished object once.
+   */
+  onSelect?: (
+    value: string | number | null,
+    option: Option | null,
+  ) => Record<string, unknown> | void
 }
 
 /**
@@ -51,9 +68,12 @@ export default function FormikDropdown({
       loadOptions={loadOptions}
       value={(formik.values[name] as string | number | null) ?? null}
       onChange={(value, option) => {
-        formik.setFieldValue(name, value ?? '')
+        // One write, so the schema runs once against the whole new form. See
+        // the note on `onSelect` for what the two-call version did.
+        const cascade = onSelect?.(value, option) ?? {}
+
+        formik.setValues({ ...formik.values, [name]: value ?? '', ...cascade })
         formik.setFieldTouched(name, true, false)
-        onSelect?.(value, option)
       }}
       placeholder={placeholder}
       isRequired={isRequired}

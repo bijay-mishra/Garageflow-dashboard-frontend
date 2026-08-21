@@ -128,8 +128,12 @@ export default function JobCardForm({ editing, onClose }: JobCardFormProps) {
               disabled={!!editing}
               onSelect={(value) => {
                 // Opening a job is when the current mileage gets recorded.
+                // Returned rather than written with a second setFieldValue —
+                // that validated against a form where vehicleId was still
+                // empty and left "Vehicle is required" showing under a
+                // dropdown that plainly had a vehicle in it.
                 const vehicle = vehicles.find((v) => v.id === value)
-                if (vehicle) formik.setFieldValue('odometer', vehicle.odometer)
+                return vehicle ? { odometer: vehicle.odometer } : undefined
               }}
             />
             <div>

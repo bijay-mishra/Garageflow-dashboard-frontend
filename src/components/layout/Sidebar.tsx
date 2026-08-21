@@ -5,7 +5,7 @@ import { ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Avatar from '@/components/common/Avatar'
 import Logo from '@/components/common/Logo'
 import { workshopInfo } from '@/data/seed'
-import { useGetDashboardSummary } from '@/components/Dashboard/dashboard-query'
+import { useNavBadges } from '@/hooks/useNavBadges'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { useMenu, type MenuNode } from '@/context/MenuContext'
@@ -31,11 +31,15 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
   const { user } = useAuth()
   const { tree, loading } = useMenu()
 
-  // The badge is one number, so it comes from the dashboard aggregate rather
-  // than from downloading every job card to count them here. NotificationMenu
-  // already holds this query, so the sidebar costs no extra request.
-  const { data: summary } = useGetDashboardSummary()
-  const openJobs = summary?.openJobs ?? 0
+  // "What has turned up here since you last looked", per row. Counted by the
+  // server and differenced against a per-browser mark — see useNavBadges.
+  //
+  // This used to be one number on one row: open job cards, off the dashboard
+  // aggregate. That was a workload figure rather than a new-arrival one, so it
+  // never went out no matter how many times you opened the page, and every
+  // other section of the app could take on work without the rail saying a
+  // word — a booking, a customer's message, a car dropped off.
+  const badgeFor = useNavBadges()
 
   // On the rail everything but the icons disappears (desktop only — the mobile
   // drawer always shows full labels).
@@ -143,14 +147,20 @@ export default function Sidebar({ open, collapsed, onClose }: SidebarProps) {
                   screen to say so. */}
               {tree.map((item) =>
                 item.children.length > 0 ? (
-                  <NavGroup key={item.key} item={item} collapsed={collapsed} onNavigate={onClose} />
+                  <NavGroup
+                    key={item.key}
+                    item={item}
+                    collapsed={collapsed}
+                    onNavigate={onClose}
+                    badgeFor={badgeFor}
+                  />
                 ) : (
                   <Item
                     key={item.key}
                     item={item}
                     collapsed={collapsed}
                     onNavigate={onClose}
-                    badge={item.route === '/job-cards' ? openJobs : 0}
+                    badge={badgeFor(item.route)}
                   />
                 ),
               )}
@@ -246,10 +256,12 @@ function NavGroup({
   item,
   collapsed,
   onNavigate,
+  badgeFor,
 }: {
   item: MenuNode
   collapsed: boolean
   onNavigate: () => void
+  badgeFor: (route?: string) => number
 }) {
   const { label } = useMenu()
   const { pathname } = useLocation()
@@ -259,12 +271,22 @@ function NavGroup({
   const Icon = iconFor(item.icon)
   const expanded = open || hasActiveChild
 
+  // A collapsed group hides its children, so it has to carry their news itself
+  // or the rail goes quiet about a whole branch of the menu until somebody
+  // happens to expand it.
+  const childBadge = children.reduce((sum, c) => sum + badgeFor(c.route), 0)
+
   if (children.length === 0) return null
 
   if (collapsed) {
     return (
       <div className="hidden lg:block">
-        <Item item={{ ...children[0], icon: item.icon }} collapsed onNavigate={onNavigate} />
+        <Item
+          item={{ ...children[0], icon: item.icon }}
+          collapsed
+          onNavigate={onNavigate}
+          badge={childBadge}
+        />
       </div>
     )
   }
@@ -279,6 +301,13 @@ function NavGroup({
       >
         <Icon className={clsx('h-5 w-5 shrink-0', hasActiveChild && 'text-brand-600')} />
         <span className="flex-1 truncate text-left">{label(item)}</span>
+        {/* Only while shut. Once the children are on screen the count belongs
+            on the row it actually describes. */}
+        {!expanded && childBadge > 0 && (
+          <span className="rounded-full bg-brand-600 px-1.5 py-0.5 text-xs font-bold text-white">
+            {childBadge > 99 ? '99+' : childBadge}
+          </span>
+        )}
         <ChevronDownIcon
           className={clsx('h-4 w-4 shrink-0 text-ink-400 transition-transform duration-200', expanded && 'rotate-180')}
         />
@@ -289,7 +318,14 @@ function NavGroup({
         // as hanging off their parent rather than as a second list.
         <div className="ml-4 mt-0.5 space-y-0.5 border-l border-ink-200 pl-3">
           {children.map((child) => (
-            <Item key={child.key} item={child} collapsed={false} onNavigate={onNavigate} depth={1} />
+            <Item
+              key={child.key}
+              item={child}
+              collapsed={false}
+              onNavigate={onNavigate}
+              badge={badgeFor(child.route)}
+              depth={1}
+            />
           ))}
         </div>
       )}
